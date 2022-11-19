@@ -1,0 +1,39 @@
+﻿@model List<CadeteriaMVC.ViewModels.PedidoViewModel>
+@{
+    ViewData["Title"] = "Listado de pedidos";
+}
+
+            <h1>Listado de pedidos</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nro</th>
+                        <th>Obs</th>
+                        <th>Cliente</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var Pedido in Model)
+                    {
+                    <tr>
+                        <td>@Pedido.Nro</td>
+                        <td>@Pedido.Obs</td>
+                        <td>@Pedido.Cliente</td>
+                        <td>
+                            <a class="btn btn-danger btn-sm" asp-controller="Pedidos" asp-action="EditarPedido" asp-route-id="@Pedido.Nro">
+                                <svg class="bi" width="18" height="18" fill="currentColor">
+                                  <use xlink:href="../../bootstrap-icons/bootstrap-icons.svg#pencil-fill"/>
+                                </svg>
+                            </a>
+                            <a class="btn btn-danger btn-sm" asp-controller="Pedidos" asp-action="EliminarPedido" asp-route-id="@Pedido.Nro" onclick="    return confirm('¿Eliminar definitivamente? ¡Esta acción no se puede deshacer!');">
+                                <svg class="bi" width="18" height="18" fill="currentColor">
+                                  <use xlink:href="../../bootstrap-icons/bootstrap-icons.svg#trash-fill"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            

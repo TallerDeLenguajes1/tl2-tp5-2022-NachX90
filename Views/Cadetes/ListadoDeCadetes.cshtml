@@ -1,0 +1,41 @@
+﻿@model List<CadeteriaMVC.ViewModels.CadeteViewModel>
+@{
+    ViewData["Title"] = "Listado de Cadetes";
+}
+
+            <h1>Listado de cadetes</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Dirección</th>
+                        <th>Teléfono</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var Cadete in Model)
+                    {
+                    <tr>
+                        <td>@Cadete.Id</td>
+                        <td>@Cadete.Nombre</td>
+                        <td>@Cadete.Direccion</td>
+                        <td>@Cadete.Telefono</td>
+                        <td>
+                            <a class="btn btn-danger btn-sm" asp-controller="Cadetes" asp-action="EditarCadete" asp-route-id="@Cadete.Id">
+                                <svg class="bi" width="18" height="18" fill="currentColor">
+                                  <use xlink:href="../../bootstrap-icons/bootstrap-icons.svg#pencil-fill"/>
+                                </svg>
+                            </a>
+                            <a class="btn btn-danger btn-sm" asp-controller="Cadetes" asp-action="EliminarCadete" asp-route-id="@Cadete.Id" onclick="    return confirm('¿Eliminar definitivamente? ¡Esta acción no se puede deshacer!');">
+                                <svg class="bi" width="18" height="18" fill="currentColor">
+                                  <use xlink:href="../../bootstrap-icons/bootstrap-icons.svg#trash-fill"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            
