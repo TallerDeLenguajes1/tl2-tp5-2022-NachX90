@@ -10,6 +10,11 @@
     <PackageReference Include="AutoMapper" Version="12.0.0" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <PackageReference Include="NLog" Version="5.0.5" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.116" />
+
+    <Content Include="db/RapiBit.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

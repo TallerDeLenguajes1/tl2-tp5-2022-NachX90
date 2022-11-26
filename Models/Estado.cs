@@ -1,11 +1,24 @@
 ﻿namespace CadeteriaMVC.Models;
 
-public enum Estado
+public class Estado
 {
-    EnEspera,       // El cliente realiza el pedido y está a la espera de la acreditación
-    Aprobado,       // Se acreditó el pago del pedido
-    Rechazado,      // Se rechazó el pago del pedido
-    Asignado,       // Se acreditó el pago del pedido y el cadete fue asignado para su entrega
-    Entregado,      // El cadete entregó el pedido
-    SinEntregar     // El cadete no pudo entregar el pedido. Devuelto a la sucursal
+    private uint id;
+    private string estado;
+    private string descripcion;
+
+    public uint Id { get => id; set => id = value; }
+    public string EstadoPedido { get => estado; set => estado = value; }
+    public string Descripcion { get => descripcion; set => descripcion = value; }
+
+    public Estado()
+    {
+
+    }
+
+    public Estado(uint Id, string Estado, string Descripcion)
+    {
+        id = Id;
+        estado = Estado;
+        descripcion = Descripcion;
+    }
 }

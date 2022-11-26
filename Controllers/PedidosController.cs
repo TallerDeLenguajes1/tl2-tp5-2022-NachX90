@@ -2,6 +2,7 @@
 using CadeteriaMVC.Models;
 using CadeteriaMVC.ViewModels;
 using AutoMapper;
+using System.Data.SQLite;
 
 namespace CadeteriaMVC.Controllers
 {
@@ -9,22 +10,6 @@ namespace CadeteriaMVC.Controllers
     {
         private readonly ILogger<PedidosController> _logger;
         private readonly IMapper _mapper;
-        private readonly static List<Pedido> ListaDePedidos = new();
-
-        //Estos clientes servirán por ahora. Después se implementará el CRUD Clientes.
-        //private readonly static List<Cliente> ListaDeClientes = new()
-        //{
-        //    new Cliente("Javier", "Maipú 324", 3815111111, "Dejar en portería"),
-        //    new Cliente("Sergio", "San martín 702", 3815222222, "Edificio esquina"),
-        //    new Cliente("Agustin", "Córdoba 536", 3815333333, "Oficina 4, Escribanía")
-        //};
-        private readonly static List<string> ListaDeClientes = new()
-        {
-            "Javier",
-            "Sergio",
-            "Agustin"
-        };
-        Random Random = new(); //Este random es solo para seleccionar un cliente aleatorio
 
         public PedidosController(ILogger<PedidosController> logger, IMapper mapper)
         {
@@ -35,6 +20,30 @@ namespace CadeteriaMVC.Controllers
         [HttpGet]
         public IActionResult ListadoDePedidos()
         {
+            List<Pedido> ListaDePedidos = new();
+
+            string CadenaDeConexion = "DataSource=db/RapiBit.db";
+            string SentenciaSQL = "select * from pedido inner join estado using (id_estado);";
+            using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        var nro = Convert.ToUInt32(string.Format("{0}", Reader[0]));
+                        var obs = string.Format("{0}", Reader[1]);
+                        var id_cliente = Convert.ToUInt32(string.Format("{0}", Reader[2]));
+                        var id_cadete = Convert.ToUInt32(string.Format("{0}", Reader[3]));
+                        var id_estado = Convert.ToUInt32(string.Format("{0}", Reader[4]));
+                        var estado = string.Format("{0}", Reader[5]);
+                        Pedido Pedido = new(nro, obs, id_cliente, id_cadete, id_estado, estado);
+                        ListaDePedidos.Add(Pedido);
+                    }
+                }
+                Conexion.Close();
+            }
             var ListaDePedidosViewModel = _mapper.Map<List<PedidoViewModel>>(ListaDePedidos);
             return View(ListaDePedidosViewModel);
         }
@@ -50,8 +59,15 @@ namespace CadeteriaMVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                var Pedido = new Pedido(PedidoViewModel.Obs, ListaDeClientes[Random.Next(ListaDeClientes.Count())]);
-                ListaDePedidos.Add(Pedido);
+                string CadenaDeConexion = "DataSource=db/RapiBit.db";
+                string SentenciaSQL = $"insert into pedido (obs, id_cliente, id_cadete, id_estado) values ('{PedidoViewModel.Obs}', {PedidoViewModel.IdCliente}, {PedidoViewModel.IdCadete}, {PedidoViewModel.IdEstado});";
+                using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
+                }
                 return RedirectToAction("ListadoDePedidos");
             }
             else
@@ -61,29 +77,131 @@ namespace CadeteriaMVC.Controllers
         }
 
         [HttpGet]
-        public IActionResult EliminarPedido(int Nro)
+        public IActionResult EliminarPedido(int Id)
         {
-            ListaDePedidos.RemoveAll(i => i.Nro == Nro);
+            string CadenaDeConexion = "DataSource=db/RapiBit.db";
+            string SentenciaSQL = $"delete from pedido where nro = {Id};";
+            using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                Comando.ExecuteNonQuery();
+                Conexion.Close();
+            }
             return RedirectToAction("ListadoDePedidos");
         }
 
         [HttpGet]
-        public IActionResult EditarPedido(int Nro)
+        public IActionResult EditarPedido(int Id)
         {
-            Pedido Pedido = ListaDePedidos.Single(i => i.Nro == Nro);
-            PedidoViewModel PedidoViewModel = _mapper.Map<PedidoViewModel>(Pedido);
+            PedidoViewModel PedidoViewModel = new();
+            string CadenaDeConexion = "DataSource=db/RapiBit.db";
+            string SentenciaSQL = $"select * from pedido inner join estado using (id_estado) where nro = {Id};";
+            using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        var nro = Convert.ToUInt32(string.Format("{0}", Reader[0]));
+                        var obs = string.Format("{0}", Reader[1]);
+                        var id_cliente = Convert.ToUInt32(string.Format("{0}", Reader[2]));
+                        var id_cadete = Convert.ToUInt32(string.Format("{0}", Reader[3]));
+                        var id_estado = Convert.ToUInt32(string.Format("{0}", Reader[4]));
+                        var estado = string.Format("{0}", Reader[5]);
+                        Pedido Pedido = new(nro, obs, id_cliente, id_cadete, id_estado, estado);
+                        PedidoViewModel = _mapper.Map<PedidoViewModel>(Pedido);
+                    }
+                }
+                Conexion.Close();
+            }
             return View(PedidoViewModel);
         }
 
         [HttpPost]
         public IActionResult EditarPedido(PedidoViewModel PedidoViewModel)
         {
-            int i = ListaDePedidos.FindIndex(i => i.Nro == PedidoViewModel.Nro);
-            Pedido Pedido = _mapper.Map<Pedido>(PedidoViewModel);
-            Pedido.Contador--;
-            ListaDePedidos[i] = Pedido;
-            return RedirectToAction("ListadoDePedidos");
+            if (ModelState.IsValid)
+            {
+                string CadenaDeConexion = "DataSource=db/RapiBit.db";
+                string SentenciaSQL = $"update pedido set obs='{PedidoViewModel.Obs}', id_cliente={PedidoViewModel.IdCliente}, id_cadete={PedidoViewModel.IdCadete}, id_estado={PedidoViewModel.IdEstado} where nro={PedidoViewModel.Nro};";
+                using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
+                }
+                return RedirectToAction("ListadoDePedidos");
+            }
+            else
+            {
+                return RedirectToAction("EditarPedido");
+            }
         }
 
+        [HttpGet]
+        public IActionResult ListarPorCadete(int Id)
+        {
+            List<Pedido> ListaDePedidos = new();
+
+            string CadenaDeConexion = "DataSource=db/RapiBit.db";
+            string SentenciaSQL = $"select * from pedido inner join estado using (id_estado) where id_cadete={Id};";
+            using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        var nro = Convert.ToUInt32(string.Format("{0}", Reader[0]));
+                        var obs = string.Format("{0}", Reader[1]);
+                        var id_cliente = Convert.ToUInt32(string.Format("{0}", Reader[2]));
+                        var id_cadete = Convert.ToUInt32(string.Format("{0}", Reader[3]));
+                        var id_estado = Convert.ToUInt32(string.Format("{0}", Reader[4]));
+                        var estado = string.Format("{0}", Reader[5]);
+                        Pedido Pedido = new(nro, obs, id_cliente, id_cadete, id_estado, estado);
+                        ListaDePedidos.Add(Pedido);
+                    }
+                }
+                Conexion.Close();
+            }
+            var ListaDePedidosViewModel = _mapper.Map<List<PedidoViewModel>>(ListaDePedidos);
+            return View(ListaDePedidosViewModel);
+        }
+
+        [HttpGet]
+        public IActionResult ListarPorCliente(int Id)
+        {
+            List<Pedido> ListaDePedidos = new();
+
+            string CadenaDeConexion = "DataSource=db/RapiBit.db";
+            string SentenciaSQL = $"select * from pedido inner join estado using (id_estado) where id_cliente={Id};";
+            using (var Conexion = new SQLiteConnection(CadenaDeConexion))
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        var nro = Convert.ToUInt32(string.Format("{0}", Reader[0]));
+                        var obs = string.Format("{0}", Reader[1]);
+                        var id_cliente = Convert.ToUInt32(string.Format("{0}", Reader[2]));
+                        var id_cadete = Convert.ToUInt32(string.Format("{0}", Reader[3]));
+                        var id_estado = Convert.ToUInt32(string.Format("{0}", Reader[4]));
+                        var estado = string.Format("{0}", Reader[5]);
+                        Pedido Pedido = new(nro, obs, id_cliente, id_cadete, id_estado, estado);
+                        ListaDePedidos.Add(Pedido);
+                    }
+                }
+                Conexion.Close();
+            }
+            var ListaDePedidosViewModel = _mapper.Map<List<PedidoViewModel>>(ListaDePedidos);
+            return View(ListaDePedidosViewModel);
+        }
     }
 }

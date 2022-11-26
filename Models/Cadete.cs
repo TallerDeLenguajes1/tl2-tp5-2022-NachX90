@@ -1,19 +1,27 @@
 ﻿namespace CadeteriaMVC.Models;
 
-public class Cadete : Persona
+public class Cadete
 {
-    private List<Pedido> listaDePedidos;
+    private uint id;
+    private string? nombre;
+    private string? direccion;
+    private ulong telefono;
 
-    public List<Pedido> ListaDePedidos { get => listaDePedidos; set => listaDePedidos = value; }
+    public uint Id { get => id; set => id = value; }
+    public string? Nombre { get => nombre; set => nombre = value; }
+    public string? Direccion { get => direccion; set => direccion = value; }
+    public ulong Telefono { get => telefono; set => telefono = value; }
 
-    public Cadete(string Nombre, string Direccion, ulong Telefono) : base(Nombre, Direccion, Telefono)
+    public Cadete()
     {
-        listaDePedidos = new List<Pedido>();
+
     }
 
-    public void AsignarPedido(Pedido Pedido)
+    public Cadete(uint Id, string Nombre, string Direccion, ulong Telefono)
     {
-        ListaDePedidos.Add(Pedido);
-        Pedido.Estado = Estado.Asignado;
+        id = Id;
+        nombre = Nombre;
+        direccion = Direccion;
+        telefono = Telefono;
     }
 }

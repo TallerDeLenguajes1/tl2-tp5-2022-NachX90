@@ -2,29 +2,40 @@
 
 public class Pedido
 {
-    private static uint contador = 0;
     private uint nro;
-    private readonly string? obs;
-    //private readonly Cliente cliente;
-    private readonly string? cliente;
-    private Estado estado;
+    private string obs;
+    private uint idCliente;
     private uint idCadete;
+    private uint idEstado;
+    private string estado;
 
-    public static uint Contador { get => contador; set => contador = value; }
     public uint Nro { get => nro; set => nro = value; }
-    public string? Obs => obs;
-    //public Cliente Cliente => cliente;
-    public string? Cliente => cliente;
-    public Estado Estado { get => estado; set => estado = value; }
+    public string Obs { get => obs; set => obs = value; }
+    public uint IdCliente { get => idCliente; set => idCliente = value; }
     public uint IdCadete { get => idCadete; set => idCadete = value; }
+    public uint IdEstado { get => idEstado; set => idEstado = value; }
+    public string Estado { get => estado; set => estado = value; }
 
-    //public Pedido(string? Obs, Cliente Cliente)
-    public Pedido(string? Obs, string? Cliente)
+    public Pedido()
     {
-        contador++;
-        nro = contador;
+
+    }
+
+    public Pedido(uint Nro, string Obs, uint IdCliente)
+    {
+        nro = Nro;
         obs = Obs;
-        cliente = Cliente;
-        estado = Estado.EnEspera;
+        idCliente = IdCliente;
+        idEstado = 1;
+    }
+
+    public Pedido(uint Nro, string Obs, uint IdCliente, uint IdCadete, uint IdEstado, string Estado)
+    {
+        nro = Nro;
+        obs = Obs;
+        idCliente = IdCliente;
+        idCadete = IdCadete;
+        idEstado = IdEstado;
+        estado = Estado;
     }
 }

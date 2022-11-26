@@ -6,24 +6,24 @@ using System.Data.SQLite;
 
 namespace CadeteriaMVC.Controllers
 {
-    public class CadetesController : Controller
+    public class ClientesController : Controller
     {
-        private readonly ILogger<CadetesController> _logger;
+        private readonly ILogger<ClientesController> _logger;
         private readonly IMapper _mapper;
 
-        public CadetesController(ILogger<CadetesController> logger, IMapper mapper)
+        public ClientesController(ILogger<ClientesController> logger, IMapper mapper)
         {
             _logger = logger;
             _mapper = mapper;
         }
 
         [HttpGet]
-        public IActionResult ListadoDeCadetes()
+        public IActionResult ListadoDeClientes()
         {
-            List<Cadete> ListaDeCadetes = new();
+            List<Cliente> ListaDeClientes = new();
 
             string CadenaDeConexion = "DataSource=db/RapiBit.db";
-            string SentenciaSQL = "select * from cadete;";
+            string SentenciaSQL = "select * from cliente;";
             using (var Conexion = new SQLiteConnection(CadenaDeConexion))
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -35,30 +35,31 @@ namespace CadeteriaMVC.Controllers
                         var id = Convert.ToUInt32(string.Format("{0}", Reader[0]));
                         var nombre = string.Format("{0}", Reader[1]);
                         var direccion = string.Format("{0}", Reader[2]);
-                        var telefono = Convert.ToUInt32(string.Format("{0}", Reader[3]));
-                        Cadete Cad = new(id, nombre, direccion, telefono);
-                        ListaDeCadetes.Add(Cad);
+                        var referenciaDireccion = string.Format("{0}", Reader[3]);
+                        var telefono = Convert.ToUInt32(string.Format("{0}", Reader[4]));
+                        Cliente Cli = new(id, nombre, direccion, referenciaDireccion, telefono);
+                        ListaDeClientes.Add(Cli);
                     }
                 }
                 Conexion.Close();
             }
-            var ListaDeCadetesViewModel = _mapper.Map<List<CadeteViewModel>>(ListaDeCadetes);
-            return View(ListaDeCadetesViewModel);
+            var ListaDeClientesViewModel = _mapper.Map<List<ClienteViewModel>>(ListaDeClientes);
+            return View(ListaDeClientesViewModel);
         }
 
         [HttpGet]
-        public IActionResult CrearCadete()
+        public IActionResult CrearCliente()
         {
-            return View(new CadeteViewModel());
+            return View(new ClienteViewModel());
         }
 
         [HttpPost]
-        public IActionResult CrearCadete(CadeteViewModel CadeteViewModel)
+        public IActionResult CrearCliente(ClienteViewModel ClienteViewModel)
         {
             if (ModelState.IsValid)
             {
                 string CadenaDeConexion = "DataSource=db/RapiBit.db";
-                string SentenciaSQL = $"insert into cadete (nombre, direccion, telefono) values ('{CadeteViewModel.Nombre}', '{CadeteViewModel.Direccion}', '{CadeteViewModel.Telefono}');";
+                string SentenciaSQL = $"insert into cliente (nombre, direccion, referencia, telefono) values ('{ClienteViewModel.Nombre}', '{ClienteViewModel.Direccion}', '{ClienteViewModel.ReferenciaDeDireccion}', '{ClienteViewModel.Telefono}');";
                 using (var Conexion = new SQLiteConnection(CadenaDeConexion))
                 {
                     var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -66,19 +67,19 @@ namespace CadeteriaMVC.Controllers
                     Comando.ExecuteNonQuery();
                     Conexion.Close();
                 }
-                return RedirectToAction("ListadoDeCadetes");
+                return RedirectToAction("ListadoDeClientes");
             }
             else
             {
-                return RedirectToAction("CrearCadete");
+                return RedirectToAction("CrearCliente");
             }
         }
 
         [HttpGet]
-        public IActionResult EliminarCadete(int Id)
+        public IActionResult EliminarCliente(int Id)
         {
             string CadenaDeConexion = "DataSource=db/RapiBit.db";
-            string SentenciaSQL = $"delete from cadete where id = {Id};";
+            string SentenciaSQL = $"delete from cliente where id = {Id};";
             using (var Conexion = new SQLiteConnection(CadenaDeConexion))
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -86,15 +87,15 @@ namespace CadeteriaMVC.Controllers
                 Comando.ExecuteNonQuery();
                 Conexion.Close();
             }
-            return RedirectToAction("ListadoDeCadetes");
+            return RedirectToAction("ListadoDeClientes");
         }
 
         [HttpGet]
-        public IActionResult EditarCadete(int Id)
+        public IActionResult EditarCliente(int Id)
         {
-            CadeteViewModel CadVM = new();
+            ClienteViewModel CliVM = new();
             string CadenaDeConexion = "DataSource=db/RapiBit.db";
-            string SentenciaSQL = $"select * from cadete where id = {Id};";
+            string SentenciaSQL = $"select * from cliente where id = {Id};";
             using (var Conexion = new SQLiteConnection(CadenaDeConexion))
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -106,23 +107,24 @@ namespace CadeteriaMVC.Controllers
                         var id = Convert.ToUInt32(string.Format("{0}", Reader[0]));
                         var nombre = string.Format("{0}", Reader[1]);
                         var direccion = string.Format("{0}", Reader[2]);
-                        var telefono = Convert.ToUInt32(string.Format("{0}", Reader[3]));
-                        Cadete Cad = new(id, nombre, direccion, telefono);
-                        CadVM = _mapper.Map<CadeteViewModel>(Cad);
+                        var referencia = string.Format("{0}", Reader[3]);
+                        var telefono = Convert.ToUInt32(string.Format("{0}", Reader[4]));
+                        Cliente Cli = new(id, nombre, direccion, referencia, telefono);
+                        CliVM = _mapper.Map<ClienteViewModel>(Cli);
                     }
                 }
                 Conexion.Close();
             }
-            return View(CadVM);
+            return View(CliVM);
         }
 
         [HttpPost]
-        public IActionResult EditarCadete(CadeteViewModel CadeteViewModel)
+        public IActionResult EditarCliente(ClienteViewModel ClienteViewModel)
         {
             if (ModelState.IsValid)
             {
                 string CadenaDeConexion = "DataSource=db/RapiBit.db";
-                string SentenciaSQL = $"update cadete set nombre='{CadeteViewModel.Nombre}', direccion='{CadeteViewModel.Direccion}', telefono='{CadeteViewModel.Telefono}' where id = {CadeteViewModel.Id};";
+                string SentenciaSQL = $"update cliente set nombre='{ClienteViewModel.Nombre}', direccion='{ClienteViewModel.Direccion}', direccion='{ClienteViewModel.ReferenciaDeDireccion}', telefono='{ClienteViewModel.Telefono}' where id = {ClienteViewModel.Id};";
                 using (var Conexion = new SQLiteConnection(CadenaDeConexion))
                 {
                     var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -130,11 +132,11 @@ namespace CadeteriaMVC.Controllers
                     Comando.ExecuteNonQuery();
                     Conexion.Close();
                 }
-                return RedirectToAction("ListadoDeCadetes");
+                return RedirectToAction("ListadoDeClientes");
             }
             else
             {
-                return RedirectToAction("EditarCadete");
+                return RedirectToAction("EditarCliente");
             }
         }
 

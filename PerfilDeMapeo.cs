@@ -9,5 +9,6 @@ public class PerfilDeMapeo : Profile
         CreateMap<Cadete, CadeteViewModel>().ReverseMap();
         CreateMap<Cliente, ClienteViewModel>().ReverseMap();
         CreateMap<Pedido, PedidoViewModel>().ReverseMap();
+        CreateMap<Estado, EstadoViewModel>().ReverseMap();
     }
 }
