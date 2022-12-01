@@ -7,11 +7,11 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Nombre</th>
-                        <th scope="col">Dirección</th>
-                        <th scope="col">Referencia de dirección</th>
-                        <th scope="col">Teléfono</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Id)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Nombre)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Direccion)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().ReferenciaDeDireccion)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Telefono)</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>

@@ -3,15 +3,15 @@
     ViewData["Title"] = "Listado de pedidos por cadete";
 }
 
-            <h1>Listado de pedidos por cadete</h1>
+            <h1>@ViewData["Title"]: @ViewData["Cadete"]</h1>
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">Nro</th>
-                        <th scope="col">Obs</th>
-                        <th scope="col">Cliente</th>
-                        <th scope="col">Cadete</th>
-                        <th scope="col">Estado</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Nro)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Obs)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Cliente)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Cadete)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Estado)</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
@@ -21,8 +21,8 @@
                     <tr>
                         <td scope="row" class="align-middle">@Pedido.Nro</td>
                         <td class="align-middle">@Pedido.Obs</td>
-                        <td class="align-middle">@Pedido.IdCliente</td>
-                        <td class="align-middle">@Pedido.IdCadete</td>
+                        <td class="align-middle">@Pedido.Cliente</td>
+                        <td class="align-middle">@Pedido.Cadete</td>
                         <td class="align-middle">@Pedido.Estado</td>
                         <td class="align-middle">
                             <a class="btn btn-danger btn-sm my-1" asp-controller="Pedidos" asp-action="EditarPedido" asp-route-id="@Pedido.Nro">

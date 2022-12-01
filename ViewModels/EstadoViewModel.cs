@@ -3,7 +3,7 @@ namespace CadeteriaMVC.ViewModels;
 
 public class EstadoViewModel
 {
-    public uint id;
-    public string estado;
-    public string descripcion;
+    public uint Id { get; set; }
+    public string EstadoPedido { get; set; }
+    public string Descripcion { get; set; }
 }

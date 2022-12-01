@@ -7,6 +7,8 @@ public class Pedido
     private uint idCliente;
     private uint idCadete;
     private uint idEstado;
+    private string cliente;
+    private string cadete;
     private string estado;
 
     public uint Nro { get => nro; set => nro = value; }
@@ -14,28 +16,12 @@ public class Pedido
     public uint IdCliente { get => idCliente; set => idCliente = value; }
     public uint IdCadete { get => idCadete; set => idCadete = value; }
     public uint IdEstado { get => idEstado; set => idEstado = value; }
+    public string Cliente { get => cliente; set => cliente = value; }
+    public string Cadete { get => cadete; set => cadete = value; }
     public string Estado { get => estado; set => estado = value; }
 
     public Pedido()
     {
 
-    }
-
-    public Pedido(uint Nro, string Obs, uint IdCliente)
-    {
-        nro = Nro;
-        obs = Obs;
-        idCliente = IdCliente;
-        idEstado = 1;
-    }
-
-    public Pedido(uint Nro, string Obs, uint IdCliente, uint IdCadete, uint IdEstado, string Estado)
-    {
-        nro = Nro;
-        obs = Obs;
-        idCliente = IdCliente;
-        idCadete = IdCadete;
-        idEstado = IdEstado;
-        estado = Estado;
     }
 }
