@@ -1,4 +1,4 @@
-﻿@model List<CadeteriaMVC.ViewModels.ClienteViewModel>
+﻿@model CadeteriaMVC.ViewModels.Clientes.ListadoDeClientesVM
 @{
     ViewData["Title"] = "Listado de Clientes";
 }
@@ -7,19 +7,19 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Id)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Nombre)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Direccion)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().ReferenciaDeDireccion)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Telefono)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeClientesVM.First().Id)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeClientesVM.First().Nombre)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeClientesVM.First().Direccion)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeClientesVM.First().ReferenciaDeDireccion)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeClientesVM.First().Telefono)</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var Cliente in Model)
+                    @foreach (var Cliente in Model.ListaDeClientesVM)
                     {
                     <tr>
-                        <td scope="row" class="align-middle">@Cliente.Id</td>
+                        <th scope="row" class="align-middle">@Cliente.Id</th>
                         <td class="align-middle">@Cliente.Nombre</td>
                         <td class="align-middle">@Cliente.Direccion</td>
                         <td class="align-middle">@Cliente.ReferenciaDeDireccion</td>
@@ -31,13 +31,13 @@
                                 </svg>
                                 Listar
                             </a>
-                            <a class="btn btn-danger btn-sm" asp-controller="Clientes" asp-action="EditarCliente" asp-route-id="@Cliente.Id">
+                            <a class="btn btn-danger btn-sm my-1" asp-controller="Clientes" asp-action="EditarCliente" asp-route-id="@Cliente.Id">
                                 <svg class="bi" width="18" height="18" fill="currentColor">
                                   <use xlink:href="../../bootstrap-icons/bootstrap-icons.svg#pencil-fill"/>
                                 </svg>
                                 Editar
                             </a>
-                            <a class="btn btn-danger btn-sm" asp-controller="Clientes" asp-action="EliminarCliente" asp-route-id="@Cliente.Id" onclick="    return confirm('¿Eliminar definitivamente? ¡Esta acción no se puede deshacer!');">
+                            <a class="btn btn-danger btn-sm my-1" asp-controller="Clientes" asp-action="EliminarCliente" asp-route-id="@Cliente.Id" onclick="    return confirm('¿Eliminar definitivamente? ¡Esta acción no se puede deshacer!');">
                                 <svg class="bi" width="18" height="18" fill="currentColor">
                                   <use xlink:href="../../bootstrap-icons/bootstrap-icons.svg#trash-fill"/>
                                 </svg>

@@ -1,4 +1,4 @@
-﻿@model List<CadeteriaMVC.ViewModels.CadeteViewModel>
+﻿@model CadeteriaMVC.ViewModels.Cadetes.ListadoDeCadetesVM
 @{
     ViewData["Title"] = "Listado de Cadetes";
 }
@@ -7,15 +7,15 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Id)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Nombre)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Direccion)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Telefono)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeCadetesVM.First().Id)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeCadetesVM.First().Nombre)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeCadetesVM.First().Direccion)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeCadetesVM.First().Telefono)</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var Cadete in Model)
+                    @foreach (var Cadete in Model.ListaDeCadetesVM)
                     {
                     <tr>
                         <th scope="row" class="align-middle">@Cadete.Id</th>

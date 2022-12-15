@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccesor
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -12,7 +13,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><img class="d-inline-block align-top" height="30" width="30" src="~/favicon.ico" alt="" />  Cadeteria RapiBit</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Inicio" asp-action="Index"><img class="d-inline-block align-top" height="30" width="30" src="~/favicon.ico" alt="" />  Cadeteria RapiBit</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -20,8 +21,13 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Inicio" asp-action="Index">Inicio</a>
                         </li>
+@{
+    if (@HttpContextAccesor.HttpContext.Session.GetInt32("IdRol") > 0) // está logueado
+    {
+        if (@HttpContextAccesor.HttpContext.Session.GetInt32("IdRol") == 1) // es admin
+        {
                         <li class="nav-item dropdown">
                             <a class="nav-link text-dark dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadetes</a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -55,6 +61,23 @@
                                 </li>
                             </ul>
                         </li>
+        }
+        if (@HttpContextAccesor.HttpContext.Session.GetInt32("IdRol") == 3) // es cadete
+        {
+                        <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Pedidos" asp-action="ListarPorCadete" asp-route-id="@HttpContextAccesor.HttpContext.Session.GetInt32("IdCadete")">Pedidos</a>
+                        </li>
+        }
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-dark dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">@HttpContextAccesor.HttpContext.Session.GetString("Usuario")</a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li>
+                                    <a class="dropdown-item text-dark" asp-area="" asp-controller="Inicio" asp-action="Salir">Salir</a>
+                                </li>
+                            </ul>
+                        </li>                            
+    }
+}
                     </ul>
                 </div>
             </div>
@@ -68,7 +91,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2022 - Cadeteria RapiBit - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+            &copy; 2022 - Cadeteria RapiBit - <a asp-area="" asp-controller="Inicio" asp-action="Privacidad">Privacidad</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

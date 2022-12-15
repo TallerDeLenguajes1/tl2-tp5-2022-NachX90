@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-namespace CadeteriaMVC.ViewModels;
+namespace CadeteriaMVC.ViewModels.Cadetes;
 
-public class ClienteViewModel
+public class EditarCadeteVM
 {
-    public uint Id { get; set; }
+    [Required]
+    public int Id { get; set; }
 
     [Required(ErrorMessage = "El nombre es obligatorio")]
     [StringLength(45)]
@@ -14,10 +15,6 @@ public class ClienteViewModel
     [StringLength(45)]
     [Display(Name = "Dirección")]
     public string Direccion { get; set; }
-
-    [StringLength(45)]
-    [Display(Name = "Referencia de dirección")]
-    public string ReferenciaDeDireccion { get; set; }
 
     [Required(ErrorMessage = "El teléfono es obligatorio")]
     [Range(1100000000, 9999999999, ErrorMessage = "El teléfono debe tener 10 dígitos, sin 0 ni 15.")]

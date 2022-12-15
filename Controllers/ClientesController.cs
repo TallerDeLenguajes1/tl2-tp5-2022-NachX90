@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using CadeteriaMVC.Models;
-using CadeteriaMVC.ViewModels;
+using System.Diagnostics;
 using AutoMapper;
-using System.Data.SQLite;
 using CadeteriaMVC.Repositories;
+using CadeteriaMVC.Models;
+using CadeteriaMVC.ViewModels.Clientes;
+using CadeteriaMVC.Enums;
 
 namespace CadeteriaMVC.Controllers
 {
@@ -21,63 +22,124 @@ namespace CadeteriaMVC.Controllers
         }
 
         [HttpGet]
+        public IActionResult Index()
+        {
+            switch (HttpContext.Session.GetInt32("IdRol"))
+            {
+                case (int)Roles.Administrador:
+                    return RedirectToAction("ListadoDeClientes");
+                default:
+                    return RedirectToAction("Index", "Inicio");
+            }
+        }
+
+        [HttpGet]
         public IActionResult ListadoDeClientes()
         {
-            var ListaDeClientes = _clientesRepository.ObtenerTodos();
-            var ListaDeClientesViewModel = _mapper.Map<List<ClienteViewModel>>(ListaDeClientes);
-            return View(ListaDeClientesViewModel);
+            switch (HttpContext.Session.GetInt32("IdRol"))
+            {
+                case (int)Roles.Administrador:
+                    var ListaDeClientes = _clientesRepository.ObtenerTodos();
+                    var ListaDeClientesVM = _mapper.Map<List<ClienteVM>>(ListaDeClientes);
+                    var ListadoDeClientesVM = new ListadoDeClientesVM();
+                    ListadoDeClientesVM.ListaDeClientesVM = ListaDeClientesVM;
+                    return View(ListadoDeClientesVM);
+                default:
+                    return RedirectToAction("Index", "Inicio");
+            }
         }
 
         [HttpGet]
         public IActionResult CrearCliente()
         {
-            return View(new ClienteViewModel());
+            switch (HttpContext.Session.GetInt32("IdRol"))
+            {
+                case (int)Roles.Administrador:
+                    return View(new CrearClienteVM());
+                default:
+                    return RedirectToAction("Index", "Inicio");
+            }
         }
 
         [HttpPost]
-        public IActionResult CrearCliente(ClienteViewModel ClienteViewModel)
+        public IActionResult CrearCliente(CrearClienteVM CrearClienteVM)
         {
-            if (ModelState.IsValid)
+            switch (HttpContext.Session.GetInt32("IdRol"))
             {
-                var Cliente = _mapper.Map<Cliente>(ClienteViewModel);
-                _clientesRepository.Crear(Cliente);
-                return RedirectToAction("ListadoDeClientes");
-            }
-            else
-            {
-                return RedirectToAction("CrearCliente");
+                case (int)Roles.Administrador:
+                    if (ModelState.IsValid)
+                    {
+                        var Cliente = _mapper.Map<Cliente>(CrearClienteVM);
+                        _clientesRepository.Crear(Cliente);
+                        return RedirectToAction("ListadoDeClientes");
+                    }
+                    else
+                    {
+                        return RedirectToAction("CrearCliente");
+                    }
+                default:
+                    return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpGet]
         public IActionResult EliminarCliente(int Id)
         {
-            _clientesRepository.Eliminar(Id);
-            return RedirectToAction("ListadoDeClientes");
+            switch (HttpContext.Session.GetInt32("IdRol"))
+            {
+                case (int)Roles.Administrador:
+                    _clientesRepository.Eliminar(Id);
+                    return RedirectToAction("ListadoDeClientes");
+                default:
+                    return RedirectToAction("Index", "Inicio");
+            }
         }
 
         [HttpGet]
         public IActionResult EditarCliente(int Id)
         {
-            var Cliente = _clientesRepository.Obtener(Id);
-            var ClienteViewModel = _mapper.Map<ClienteViewModel>(Cliente);
-            return View(ClienteViewModel);
+            switch (HttpContext.Session.GetInt32("IdRol"))
+            {
+                case (int)Roles.Administrador:
+                    var Cliente = _clientesRepository.Obtener(Id);
+                    var EditarClienteVM = _mapper.Map<EditarClienteVM>(Cliente);
+                    return View(EditarClienteVM);
+                default:
+                    return RedirectToAction("Index", "Inicio");
+            }
         }
 
         [HttpPost]
-        public IActionResult EditarCliente(ClienteViewModel ClienteViewModel)
+        public IActionResult EditarCliente(EditarClienteVM EditarClienteVM)
         {
-            if (ModelState.IsValid)
+            switch (HttpContext.Session.GetInt32("IdRol"))
             {
-                var Cliente = _mapper.Map<Cliente>(ClienteViewModel);
-                _clientesRepository.Editar(Cliente);
-                return RedirectToAction("ListadoDeClientes");
-            }
-            else
-            {
-                return RedirectToAction("EditarCliente");
+                case (int)Roles.Administrador:
+                    if (ModelState.IsValid)
+                    {
+                        var Cliente = _mapper.Map<Cliente>(EditarClienteVM);
+                        _clientesRepository.Editar(Cliente);
+                        return RedirectToAction("ListadoDeClientes");
+                    }
+                    else
+                    {
+                        return RedirectToAction("EditarCliente");
+                    }
+                default:
+                    return RedirectToAction("Index", "Inicio");
             }
         }
 
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            switch (HttpContext.Session.GetInt32("IdRol"))
+            {
+                case (int)Roles.Administrador:
+                    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                default:
+                    return RedirectToAction("Index", "Inicio");
+            }
+        }
     }
 }

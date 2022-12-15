@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
-namespace CadeteriaMVC.ViewModels;
+namespace CadeteriaMVC.ViewModels.Pedidos;
 
-public class PedidoViewModel
+public class PedidoVM
 {
     public uint Nro { get; set; }
 

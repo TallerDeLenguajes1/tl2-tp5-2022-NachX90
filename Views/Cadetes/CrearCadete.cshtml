@@ -1,7 +1,13 @@
 ﻿@section Scripts { <partial name="_ValidationScriptsPartial" /> }
-@model CadeteriaMVC.ViewModels.CadeteViewModel;
+@model CadeteriaMVC.ViewModels.Cadetes.CrearCadeteVM;
 @{
     ViewData["Title"] = "Crear cadete";
+}
+@if (TempData["Error"] != null)
+{
+    <script type="text/javascript">
+        alert('@TempData["Error"]')
+    </script>
 }
 
             <h1>Crear cadete</h1>

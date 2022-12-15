@@ -1,25 +1,25 @@
-﻿@model List<CadeteriaMVC.ViewModels.PedidoViewModel>
+﻿@model CadeteriaMVC.ViewModels.Pedidos.ListarPorClienteVM;
 @{
     ViewData["Title"] = "Listado de pedidos por cliente";
 }
 
-            <h1>@ViewData["Title"]: @ViewData["Cliente"]</h1>
+            <h1>@ViewData["Title"]: @Model.NombreCliente</h1>
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Nro)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Obs)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Cliente)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Cadete)</th>
-                        <th scope="col">@Html.DisplayNameFor(Model => Model.First().Estado)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDePedidosVM.First().Nro)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDePedidosVM.First().Obs)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDePedidosVM.First().Cliente)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDePedidosVM.First().Cadete)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDePedidosVM.First().Estado)</th>
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var Pedido in Model)
+        @foreach (var Pedido in Model.ListaDePedidosVM)
                     {
                     <tr>
-                        <td scope="row" class="align-middle">@Pedido.Nro</td>
+                        <th scope="row" class="align-middle">@Pedido.Nro</th>
                         <td class="align-middle">@Pedido.Obs</td>
                         <td class="align-middle">@Pedido.Cliente</td>
                         <td class="align-middle">@Pedido.Cadete</td>

@@ -1,7 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-namespace CadeteriaMVC.ViewModels;
+﻿namespace CadeteriaMVC.ViewModels.Estados;
 
-public class EstadoViewModel
+public class EstadoVM
 {
     public uint Id { get; set; }
     public string EstadoPedido { get; set; }
