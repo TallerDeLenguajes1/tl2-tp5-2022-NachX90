@@ -1,20 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using AutoMapper;
-using CadeteriaMVC.Repositories;
 using CadeteriaMVC.Models;
 using CadeteriaMVC.ViewModels.Inicio;
 using CadeteriaMVC.Enums;
+using CadeteriaMVC.Interfaces;
+using System;
 
 namespace CadeteriaMVC.Controllers
 {
-    public class InicioController : Controller
+    public class InicioController : ControlDeSesionController
     {
         private readonly ILogger<InicioController> _logger;
         private readonly IMapper _mapper;
-        private readonly IUsuariosRepository _usuariosRepository;
+        private readonly IEmpleadosRepository _usuariosRepository;
 
-        public InicioController(ILogger<InicioController> logger, IMapper mapper, IUsuariosRepository usuariosRepository)
+        public InicioController(ILogger<InicioController> logger, IMapper mapper, IEmpleadosRepository usuariosRepository)
         {
             _logger = logger;
             _mapper = mapper;
@@ -24,62 +25,80 @@ namespace CadeteriaMVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                    return View();
-                case (int)Roles.Cadete:
-                    return RedirectToAction("ListarPorCadete", "Pedidos", new { id = HttpContext.Session.GetInt32("IdCadete") });
-                default:
-                    return RedirectToAction("Ingresar");
-            }
+            if (ExisteSesion())
+                return View();
+            else
+                return RedirectToAction("Ingresar");
         }
 
         [HttpGet]
         public IActionResult Ingresar()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (ExisteSesion())
+                return RedirectToAction("Index");
+            else
             {
-                case (int)Roles.Administrador:
-                case (int)Roles.Cadete:
-                    return RedirectToAction("Index");
-                default:
-                    return View(new IngresarVM());
+                // La lista de empleados es solo para la presentación. Se debe eliminar antes de la producción.
+                try
+                {
+                    var IngresarVM = new IngresarVM();
+                    var ListaDeEmpleados = _usuariosRepository.ObtenerTodos();
+                    var ListaDeEmpleadosVM = _mapper.Map<List<EmpleadoVM>>(ListaDeEmpleados);
+                    IngresarVM.ListaDeEmpleadosVM = ListaDeEmpleadosVM;
+                    return View(IngresarVM);
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
         }
 
         [HttpPost]
         public IActionResult Ingresar(IngresarVM IngresarVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (ExisteSesion())
+                return RedirectToAction("Index");
+            else
             {
-                case (int)Roles.Administrador:
-                case (int)Roles.Cadete:
-                    return RedirectToAction("Index");
-                default:
-                    var Usuario = _mapper.Map<Usuario>(IngresarVM);
-                    Usuario = _usuariosRepository.Verificar(Usuario);
-                    if (Usuario.IdRol != (int)Roles.None)                   // El usuario fue verificado
+                try
+                {
+                    var Empleado = _mapper.Map<Empleado>(IngresarVM);
+                    Empleado = _usuariosRepository.Verificar(Empleado);
+                    if (Empleado.IDRol == (int)Roles.Administrador || Empleado.IDRol == (int)Roles.Vendedor || Empleado.IDRol == (int)Roles.Cadete)
                     {
-                        HttpContext.Session.SetString("Nombre", Usuario.Nombre);
-                        HttpContext.Session.SetString("Usuario", Usuario.Nickname);
-                        HttpContext.Session.SetInt32("IdRol", Convert.ToInt32(Usuario.IdRol));
-                        if (Usuario.IdRol == (int)Roles.Cadete)
-                            HttpContext.Session.SetInt32("IdCadete", Convert.ToInt32(Usuario.IdCadete));
+                        HttpContext.Session.SetInt32("Id", Empleado.Id);
+                        HttpContext.Session.SetString("Nombre", Empleado.Nombre);
+                        HttpContext.Session.SetString("Usuario", Empleado.Usuario);
+                        HttpContext.Session.SetInt32("IdRol", Empleado.IDRol);
+                        HttpContext.Session.SetString("Rol", Empleado.Rol);
                         return RedirectToAction("Index");
                     }
                     else
                     {
-                        TempData["Error"] = "Los datos ingresados son incorrectos. Por favor intente nuevamente";
+                        TempData["Error"] = Mensajes.MostrarError(Errores.LogueoIncorrecto);
                         return RedirectToAction("Ingresar");
                     }
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
         }
 
         [HttpGet]
         public IActionResult Salir()
         {
-            HttpContext.Session.Clear();
+            if (ExisteSesion())
+            {
+                HttpContext.Session.Clear();
+                TempData["Error"] = Mensajes.MostrarError(Errores.CerrarSesionExito);
+            }
+            else
+                TempData["Error"] = Mensajes.MostrarError(Errores.CerrarSesionCerrada);
             return RedirectToAction("Ingresar");
         }
 
@@ -91,14 +110,10 @@ namespace CadeteriaMVC.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                case (int)Roles.Cadete:
-                    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-                default:
-                    return RedirectToAction("Ingresar");
-            }
+            if (ExisteSesion())
+                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            else
+                return RedirectToAction("Ingresar");
         }
     }
 }

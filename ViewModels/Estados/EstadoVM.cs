@@ -2,7 +2,7 @@
 
 public class EstadoVM
 {
-    public uint Id { get; set; }
-    public string EstadoPedido { get; set; }
+    public int Id { get; set; }
+    public string NombreEstado { get; set; }
     public string Descripcion { get; set; }
 }

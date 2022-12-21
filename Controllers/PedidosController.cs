@@ -1,27 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using AutoMapper;
-using CadeteriaMVC.Repositories;
 using CadeteriaMVC.Models;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using CadeteriaMVC.ViewModels.Cadetes;
 using CadeteriaMVC.ViewModels.Clientes;
 using CadeteriaMVC.ViewModels.Estados;
 using CadeteriaMVC.ViewModels.Pedidos;
+using CadeteriaMVC.Interfaces;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using CadeteriaMVC.Enums;
 
 namespace CadeteriaMVC.Controllers
 {
-    public class PedidosController : Controller
+    public class PedidosController : ControlDeSesionController
     {
         private readonly ILogger<PedidosController> _logger;
         private readonly IMapper _mapper;
         private readonly IPedidosRepository _pedidosRepository;
-        private readonly IClientesRepository _clientesRepository;
-        private readonly ICadetesRepository _cadetesRepository;
-        private readonly IEstadosRepository _estadosRepository;
+        private readonly IDBRepository<Cliente> _clientesRepository;
+        private readonly IDBRepository<Empleado> _cadetesRepository;
+        private readonly IDBRepository<Estado> _estadosRepository;
 
-        public PedidosController(ILogger<PedidosController> logger, IMapper mapper, IPedidosRepository pedidosRepository, IClientesRepository clientesRepository, ICadetesRepository cadetesRepository, IEstadosRepository estadosRepository)
+        public PedidosController(ILogger<PedidosController> logger, IMapper mapper, IPedidosRepository pedidosRepository, IDBRepository<Cliente> clientesRepository, IDBRepository<Empleado> cadetesRepository, IDBRepository<Estado> estadosRepository)
         {
             _logger = logger;
             _mapper = mapper;
@@ -34,37 +33,44 @@ namespace CadeteriaMVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                    return RedirectToAction("ListadoDePedidos");
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
+            if (EsAdministrador() || EsVendedor())
+                return RedirectToAction("ListadoDePedidos");
+            else if (EsCadete())
+                return RedirectToAction("ListarPorCadete", new { id = HttpContext.Session.GetInt32("Id") });
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult ListadoDePedidos()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
+                try
+                {
                     var ListaDePedidos = _pedidosRepository.ObtenerTodos();
                     var ListaDePedidosVM = _mapper.Map<List<PedidoVM>>(ListaDePedidos);
                     var ListadoDePedidosVM = new ListadoDePedidosVM();
                     ListadoDePedidosVM.ListaDePedidosVM = ListaDePedidosVM;
                     return View(ListadoDePedidosVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult CrearPedido()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
+                try
+                {
                     var CrearPedidoVM = new CrearPedidoVM();
 
                     var ListaDeClientes = _clientesRepository.ObtenerTodos();
@@ -72,156 +78,229 @@ namespace CadeteriaMVC.Controllers
                     CrearPedidoVM.ListaDeClientesVM = new SelectList(ListaDeClientesVM, "Id", "Nombre");
 
                     return View(CrearPedidoVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpPost]
         public IActionResult CrearPedido(CrearPedidoVM CrearPedidoVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                    if (ModelState.IsValid)
+            if (EsAdministrador() || EsVendedor())
+                if (ModelState.IsValid)
+                {
+                    try
                     {
+                        CrearPedidoVM.IdEstado = 1;
                         var Pedido = _mapper.Map<Pedido>(CrearPedidoVM);
-                        _pedidosRepository.Crear(Pedido);
+                        _pedidosRepository.Alta(Pedido);
                         return RedirectToAction("ListadoDePedidos");
                     }
-                    else
+                    catch (Exception Ex)
                     {
-                        return RedirectToAction("CrearPedido");
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
                     }
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    return RedirectToAction("CrearPedido");
+                }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult EliminarPedido(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
-                    _pedidosRepository.Eliminar(Id);
+                try
+                {
+                    _pedidosRepository.BajaLogica(Id);
                     return RedirectToAction("ListadoDePedidos");
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult EditarPedido(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
-                case (int)Roles.Cadete:
-                    var Pedido = _pedidosRepository.Obtener(Id);
-                    
-                    if (HttpContext.Session.GetInt32("IdRol") == (int)Roles.Administrador || (HttpContext.Session.GetInt32("IdRol") == (int)Roles.Cadete && Pedido.IdCadete == HttpContext.Session.GetInt32("IdCadete")))
-                    {
-                        var EditarPedidoVM = _mapper.Map<EditarPedidoVM>(Pedido);
+                try
+                {
+                    var Pedido = _pedidosRepository.ObtenerPorID(Id);
+                    var EditarPedidoVM = _mapper.Map<EditarPedidoVM>(Pedido);
 
-                        var ListaDeCadetes = _cadetesRepository.ObtenerTodos();
-                        var ListaDeCadetesVM = _mapper.Map<List<CadeteVM>>(ListaDeCadetes);
-                        EditarPedidoVM.ListaDeCadetesVM = new SelectList(ListaDeCadetesVM, "Id", "Nombre");
+                    var ListaDeCadetes = _cadetesRepository.ObtenerTodos();
+                    var ListaDeCadetesVM = _mapper.Map<List<CadeteVM>>(ListaDeCadetes);
+                    EditarPedidoVM.ListaDeCadetesVM = new SelectList(ListaDeCadetesVM, "Id", "Nombre");
 
-                        var ListaDeEstados = _estadosRepository.ObtenerTodos();
-                        var ListaDeEstadosVM = _mapper.Map<List<EstadoVM>>(ListaDeEstados);
-                        EditarPedidoVM.ListaDeEstadosVM = new SelectList(ListaDeEstadosVM, "Id", "EstadoPedido");
+                    var ListaDeEstados = _estadosRepository.ObtenerTodos();
+                    var ListaDeEstadosVM = _mapper.Map<List<EstadoVM>>(ListaDeEstados);
+                    EditarPedidoVM.ListaDeEstadosVM = new SelectList(ListaDeEstadosVM, "Id", "NombreEstado");
 
-                        return View(EditarPedidoVM);
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Inicio");
-                    }
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                    return View(EditarPedidoVM);
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpPost]
         public IActionResult EditarPedido(EditarPedidoVM EditarPedidoVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                case (int)Roles.Cadete:
-                    if (ModelState.IsValid)
+            if (EsAdministrador() || EsVendedor())
+                if (ModelState.IsValid)
+                {
+                    try
                     {
                         var Pedido = _mapper.Map<Pedido>(EditarPedidoVM);
-                        _pedidosRepository.Editar(Pedido);
+                        _pedidosRepository.Modificacion(Pedido);
                         return RedirectToAction("ListadoDePedidos");
                     }
-                    else
+                    catch (Exception Ex)
                     {
-                        return RedirectToAction("EditarPedido");
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
                     }
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    return RedirectToAction("ListadoDePedidos");
+                }
+            else
+                return View("AccesoDenegado");
+        }
+
+        [HttpGet]
+        public IActionResult CambiarEstadoPedido(int Id)
+        {
+            var Pedido = _pedidosRepository.ObtenerPorID(Id);
+
+            if (EsCadete() && Pedido.IdCadete == HttpContext.Session.GetInt32("Id"))
+            {
+                try
+                {
+                    var CambiarEstadoPedidoVM = _mapper.Map<CambiarEstadoPedidoVM>(Pedido);
+
+                    var ListaDeEstados = _estadosRepository.ObtenerTodos();
+                    var ListaDeEstadosVM = _mapper.Map<List<EstadoVM>>(ListaDeEstados);
+                    CambiarEstadoPedidoVM.ListaDeEstadosVM = new SelectList(ListaDeEstadosVM, "Id", "NombreEstado");
+
+                    return View(CambiarEstadoPedidoVM);
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
+        }
+
+        [HttpPost]
+        public IActionResult CambiarEstadoPedido(CambiarEstadoPedidoVM CambiarEstadoPedidoVM)
+        {
+            if (EsCadete() && CambiarEstadoPedidoVM.IdCadete == HttpContext.Session.GetInt32("Id"))
+            {
+                if (ModelState.IsValid)
+                {
+                    try
+                    {
+                        var Pedido = _mapper.Map<Pedido>(CambiarEstadoPedidoVM);
+                        _pedidosRepository.Modificacion(Pedido);
+                    }
+                    catch (Exception Ex)
+                    {
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
+                    }
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                }
+                return RedirectToAction("ListarPorCadete", new { id = HttpContext.Session.GetInt32("Id") });
+            }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult ListarPorCadete(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor() || ( EsCadete() && Id == HttpContext.Session.GetInt32("Id") ))
             {
-                case (int)Roles.Administrador:
-                case (int)Roles.Cadete:
-                    if (HttpContext.Session.GetInt32("IdRol") == (int)Roles.Administrador || (HttpContext.Session.GetInt32("IdRol") == (int)Roles.Cadete && Id == HttpContext.Session.GetInt32("IdCadete")))
-                    {
-                        var ListarPorCadeteVM = new ListarPorCadeteVM();
+                try
+                {
+                    var ListarPorCadeteVM = new ListarPorCadeteVM();
 
-                        ListarPorCadeteVM.NombreCadete = _cadetesRepository.Obtener(Id).Nombre;
+                    ListarPorCadeteVM.NombreCadete = _cadetesRepository.ObtenerPorID(Id).Nombre;
             
-                        var ListaDePedidos = _pedidosRepository.ObtenerPorCadete(Id);
-                        var ListaDePedidosVM = _mapper.Map<List<PedidoVM>>(ListaDePedidos);
-                        ListarPorCadeteVM.ListaDePedidosVM = ListaDePedidosVM;
+                    var ListaDePedidos = _pedidosRepository.ObtenerPorCadete(Id);
+                    var ListaDePedidosVM = _mapper.Map<List<PedidoVM>>(ListaDePedidos);
+                    ListarPorCadeteVM.ListaDePedidosVM = ListaDePedidosVM;
             
-                        return View(ListarPorCadeteVM);
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Inicio");
-                    }
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                    return View(ListarPorCadeteVM);
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult ListarPorCliente(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
+                try
+                {
                     var ListarPorClienteVM = new ListarPorClienteVM();
 
-                    ListarPorClienteVM.NombreCliente = _clientesRepository.Obtener(Id).Nombre;
+                    ListarPorClienteVM.NombreCliente = _clientesRepository.ObtenerPorID(Id).Nombre;
 
                     var ListaDePedidos = _pedidosRepository.ObtenerPorCliente(Id);
                     var ListaDePedidosVM = _mapper.Map<List<PedidoVM>>(ListaDePedidos);
                     ListarPorClienteVM.ListaDePedidosVM = ListaDePedidosVM;
-                    return View(ListarPorClienteVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
-        }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                    return View(ListarPorClienteVM);
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
     }
 }

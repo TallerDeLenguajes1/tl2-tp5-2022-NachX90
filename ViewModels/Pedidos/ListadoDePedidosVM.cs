@@ -2,5 +2,5 @@
 
 public class ListadoDePedidosVM
 {
-    public List<PedidoVM>? ListaDePedidosVM { get; set; }   // Puede ser null porque puede devolver una lista vacía
+    public List<PedidoVM>? ListaDePedidosVM { get; set; }
 }

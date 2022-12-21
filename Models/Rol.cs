@@ -8,17 +8,9 @@ public class Rol
 
     public uint Id { get => id; set => id = value; }
     public string NombreRol { get => rol; set => rol = value; }
-    public string DescripcionRol { get => descripcion; set => descripcion = value; }
+    public string Descripcion { get => descripcion; set => descripcion = value; }
 
     public Rol()
     {
-
-    }
-
-    public Rol(uint Id, string NombreRol, string DescripcionRol)
-    {
-        id = Id;
-        rol = NombreRol;
-        descripcion = DescripcionRol;
     }
 }

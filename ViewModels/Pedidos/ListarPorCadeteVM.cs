@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace CadeteriaMVC.ViewModels.Pedidos;
+﻿namespace CadeteriaMVC.ViewModels.Pedidos;
 
 public class ListarPorCadeteVM
 {
-    [Required]
     public string NombreCadete { get; set; }
     public List<PedidoVM>? ListaDePedidosVM { get; set; }       // Puede ser null porque puede devolver una lista vacía
 }

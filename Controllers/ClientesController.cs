@@ -1,20 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using AutoMapper;
-using CadeteriaMVC.Repositories;
 using CadeteriaMVC.Models;
 using CadeteriaMVC.ViewModels.Clientes;
+using CadeteriaMVC.Interfaces;
 using CadeteriaMVC.Enums;
 
 namespace CadeteriaMVC.Controllers
 {
-    public class ClientesController : Controller
+    public class ClientesController : ControlDeSesionController
     {
         private readonly ILogger<ClientesController> _logger;
         private readonly IMapper _mapper;
-        private readonly IClientesRepository _clientesRepository;
+        private readonly IDBRepository<Cliente> _clientesRepository;
 
-        public ClientesController(ILogger<ClientesController> logger, IMapper mapper, IClientesRepository clientesRepository)
+        public ClientesController(ILogger<ClientesController> logger, IMapper mapper, IDBRepository<Cliente> clientesRepository)
         {
             _logger = logger;
             _mapper = mapper;
@@ -24,121 +23,157 @@ namespace CadeteriaMVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
+                return RedirectToAction("ListadoDeClientes");
+            else
             {
-                case (int)Roles.Administrador:
-                    return RedirectToAction("ListadoDeClientes");
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpGet]
         public IActionResult ListadoDeClientes()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
+                try
+                {
                     var ListaDeClientes = _clientesRepository.ObtenerTodos();
                     var ListaDeClientesVM = _mapper.Map<List<ClienteVM>>(ListaDeClientes);
                     var ListadoDeClientesVM = new ListadoDeClientesVM();
                     ListadoDeClientesVM.ListaDeClientesVM = ListaDeClientesVM;
                     return View(ListadoDeClientesVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
+            }
+            else
+            {
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpGet]
         public IActionResult CrearCliente()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
+                return View(new CrearClienteVM());
+            else
             {
-                case (int)Roles.Administrador:
-                    return View(new CrearClienteVM());
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpPost]
         public IActionResult CrearCliente(CrearClienteVM CrearClienteVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                    if (ModelState.IsValid)
+            if (EsAdministrador() || EsVendedor())
+                if (ModelState.IsValid)
+                {
+                    try
                     {
                         var Cliente = _mapper.Map<Cliente>(CrearClienteVM);
-                        _clientesRepository.Crear(Cliente);
+                        _clientesRepository.Alta(Cliente);
                         return RedirectToAction("ListadoDeClientes");
                     }
-                    else
+                    catch (Exception Ex)
                     {
-                        return RedirectToAction("CrearCliente");
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
                     }
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    return RedirectToAction("CrearCliente");
+                }
+            else
+            {
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpGet]
         public IActionResult EliminarCliente(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
-                    _clientesRepository.Eliminar(Id);
+                try
+                {
+                    _clientesRepository.BajaLogica(Id);
                     return RedirectToAction("ListadoDeClientes");
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
+            }
+            else
+            {
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpGet]
         public IActionResult EditarCliente(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsVendedor())
             {
-                case (int)Roles.Administrador:
-                    var Cliente = _clientesRepository.Obtener(Id);
+                try
+                {
+                    var Cliente = _clientesRepository.ObtenerPorID(Id);
                     var EditarClienteVM = _mapper.Map<EditarClienteVM>(Cliente);
                     return View(EditarClienteVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
+            }
+            else
+            {
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
 
         [HttpPost]
         public IActionResult EditarCliente(EditarClienteVM EditarClienteVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int)Roles.Administrador:
-                    if (ModelState.IsValid)
+            if (EsAdministrador() || EsVendedor())
+                if (ModelState.IsValid)
+                {
+                    try
                     {
                         var Cliente = _mapper.Map<Cliente>(EditarClienteVM);
-                        _clientesRepository.Editar(Cliente);
+                        _clientesRepository.Modificacion(Cliente);
                         return RedirectToAction("ListadoDeClientes");
                     }
-                    else
+                    catch (Exception Ex)
                     {
-                        return RedirectToAction("EditarCliente");
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
                     }
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    return RedirectToAction("ListadoDeClientes");
+                }
+            else
             {
-                case (int)Roles.Administrador:
-                    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                TempData["Error"] = Mensajes.MostrarError(Errores.AccesoDenegado);
+                return RedirectToAction("Index", "Inicio");
             }
         }
     }

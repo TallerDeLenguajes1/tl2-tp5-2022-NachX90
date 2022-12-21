@@ -1,20 +1,22 @@
-﻿using CadeteriaMVC.Models;
+﻿using CadeteriaMVC.Interfaces;
+using CadeteriaMVC.Models;
 using System.Data.SQLite;
+using System.Runtime.InteropServices;
 
 namespace CadeteriaMVC.Repositories
 {
     public class PedidosRepository : IPedidosRepository
     {
-        private readonly IConexionBDRepository _conexionBDRepository;
+        private readonly IDBConnectionRepository _conexionBDRepository;
 
-        public PedidosRepository(IConexionBDRepository conexionBDRepository)
+        public PedidosRepository(IDBConnectionRepository conexionBDRepository)
         {
             _conexionBDRepository = conexionBDRepository;
         }
 
-        public void Crear(Pedido Pedido)
+        public void Alta(Pedido Objeto, [Optional] int IdUsuario)
         {
-            var SentenciaSQL = $"insert into pedido (pedido, id_cliente, id_cadete, id_estado) values ('{Pedido.Obs}', {Pedido.IdCliente}, {Pedido.IdCadete}, {Pedido.IdEstado});";
+            var SentenciaSQL = $"insert into pedido (pedido, idcliente, idcadete, idestado) values ('{Objeto.Descripcion}', {Objeto.IdCliente}, {Objeto.IdCadete}, {Objeto.IdEstado});";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -24,9 +26,9 @@ namespace CadeteriaMVC.Repositories
             }
         }
 
-        public void Editar(Pedido Pedido)
+        public void BajaLogica(int Id, [Optional] int IdUsuario)
         {
-            var SentenciaSQL = $"update pedido set pedido='{Pedido.Obs}', id_cliente={Pedido.IdCliente}, id_cadete={Pedido.IdCadete}, id_estado={Pedido.IdEstado} where id_pedido={Pedido.Nro};";
+            var SentenciaSQL = $"update pedido set visible = 0 where id = {Id};";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -36,9 +38,9 @@ namespace CadeteriaMVC.Repositories
             }
         }
 
-        public void Eliminar(int Id)
+        public void Modificacion(Pedido Objeto, [Optional] int IdUsuario)
         {
-            var SentenciaSQL = $"delete from pedido where id_pedido={Id};";
+            var SentenciaSQL = $"update pedido set pedido = '{Objeto.Descripcion}', idcliente = {Objeto.IdCliente}, idcadete = {Objeto.IdCadete}, idestado = {Objeto.IdEstado} where id = {Objeto.Id};";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -48,37 +50,15 @@ namespace CadeteriaMVC.Repositories
             }
         }
 
-        public Pedido Obtener(int Id)
+        public int ObtenerID(Pedido Objeto)
         {
-            Pedido Pedido = new();
-            var SentenciaSQL = $"select pedido, id_cliente, cliente, id_cadete, cadete, id_estado, estado from pedido left join cliente using(id_cliente) left join cadete using(id_cadete) inner join estado using (id_estado) where id_pedido={Id};";    // Los join son para mostrar los nombres en los listados
-            using (var Conexion = _conexionBDRepository.ConexionSQLite())
-            {
-                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
-                Conexion.Open();
-                using (SQLiteDataReader Reader = Comando.ExecuteReader())
-                {
-                    while (Reader.Read())
-                    {
-                        Pedido.Nro = Convert.ToUInt32(Id);
-                        Pedido.Obs = string.Format("{0}", Reader[0]);
-                        Pedido.IdCliente = Convert.ToUInt32(string.Format("{0}", Reader[1]));
-                        Pedido.Cliente = string.Format("{0}", Reader[2]);
-                        Pedido.IdCadete = Convert.ToUInt32(string.Format("{0}", Reader[3]));
-                        Pedido.Cadete = string.Format("{0}", Reader[4]);
-                        Pedido.IdEstado = Convert.ToUInt32(string.Format("{0}", Reader[5]));
-                        Pedido.Estado = string.Format("{0}", Reader[6]);
-                    }
-                }
-                Conexion.Close();
-            }
-            return Pedido;
+            return Objeto.Id;       // Esto no me sirve pero debo implementarlo porque está en la interfaz
         }
 
-        public List<Pedido> ObtenerTodos()
+        public Pedido ObtenerPorID(int Id, [Optional] int IdUsuario)
         {
-            List<Pedido> ListaDePedidos = new();
-            var SentenciaSQL = "select id_pedido from pedido;";
+            Pedido Objeto = new();
+            var SentenciaSQL = $"select P.pedido, P.idcliente, CL.nombre, P.idcadete, CA.nombre, P.idestado, E.estado from pedido P inner join (select id, nombre from cliente inner join persona using (id)) CL on P.idcliente = CL.id left join (select id, nombre from empleado inner join persona using (id)) CA on P.idcadete = CA.id inner join estado E on P.idestado = E.id where P.id = {Id} and P.visible = 1;";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -87,19 +67,25 @@ namespace CadeteriaMVC.Repositories
                 {
                     while (Reader.Read())
                     {
-                        var Pedido = Obtener(Convert.ToInt32(string.Format("{0}", Reader[0])));
-                        ListaDePedidos.Add(Pedido);
+                        Objeto.Id = Id;
+                        Objeto.Descripcion = Reader[0].ToString();
+                        Objeto.IdCliente = Convert.ToInt32(Reader[1]);
+                        Objeto.Cliente = Reader[2].ToString();
+                        Objeto.IdCadete = Convert.ToInt32(Reader[3]);
+                        Objeto.Cadete = Reader[4].ToString();
+                        Objeto.IdEstado = Convert.ToInt32(Reader[5]);
+                        Objeto.Estado = Reader[6].ToString();
                     }
                 }
                 Conexion.Close();
             }
-            return ListaDePedidos;
+            return Objeto;
         }
 
-        public List<Pedido> ObtenerPorCadete(int Id)
+        public List<Pedido> ObtenerTodos([Optional] int IdUsuario)
         {
-            List<Pedido> ListaDePedidos = new();
-            var SentenciaSQL = $"select id_pedido from pedido where id_cadete={Id};";
+            List<Pedido> ListaDeObjetos = new();
+            var SentenciaSQL = "select id from pedido where visible = 1;";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -108,19 +94,19 @@ namespace CadeteriaMVC.Repositories
                 {
                     while (Reader.Read())
                     {
-                        var Pedido = Obtener(Convert.ToInt32(string.Format("{0}", Reader[0])));
-                        ListaDePedidos.Add(Pedido);
+                        var Objeto = ObtenerPorID(Convert.ToInt32(Reader[0]));
+                        ListaDeObjetos.Add(Objeto);
                     }
                 }
                 Conexion.Close();
             }
-            return ListaDePedidos;
+            return ListaDeObjetos;
         }
 
-        public List<Pedido> ObtenerPorCliente(int Id)
+        public List<Pedido> ObtenerPorCadete(int Id, [Optional] int IdUsuario)
         {
-            List<Pedido> ListaDePedidos = new();
-            var SentenciaSQL = $"select id_pedido from pedido where id_cliente={Id};";
+            List<Pedido> ListaDeObjetos = new();
+            var SentenciaSQL = $"select id from pedido where idcadete = {Id} and visible = 1;";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -129,13 +115,34 @@ namespace CadeteriaMVC.Repositories
                 {
                     while (Reader.Read())
                     {
-                        var Pedido = Obtener(Convert.ToInt32(string.Format("{0}", Reader[0])));
-                        ListaDePedidos.Add(Pedido);
+                        var Objeto = ObtenerPorID(Convert.ToInt32(Reader[0]));
+                        ListaDeObjetos.Add(Objeto);
                     }
                 }
                 Conexion.Close();
             }
-            return ListaDePedidos;
+            return ListaDeObjetos;
+        }
+
+        public List<Pedido> ObtenerPorCliente(int Id, [Optional] int IdUsuario)
+        {
+            List<Pedido> ListaDeObjetos = new();
+            var SentenciaSQL = $"select id from pedido where idcliente = {Id} and visible = 1;";
+            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        var Objeto = ObtenerPorID(Convert.ToInt32(Reader[0]));
+                        ListaDeObjetos.Add(Objeto);
+                    }
+                }
+                Conexion.Close();
+            }
+            return ListaDeObjetos;
         }
     }
 }

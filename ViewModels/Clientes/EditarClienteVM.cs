@@ -1,28 +1,27 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
 namespace CadeteriaMVC.ViewModels.Clientes;
 
 public class EditarClienteVM
 {
     [Required]
-    public uint Id { get; set; }
+    public int Id { get; set; }
 
     [Required(ErrorMessage = "El nombre es obligatorio")]
     [StringLength(45)]
     [Display(Name = "Nombre")]
     public string Nombre { get; set; }
 
-    [Required(ErrorMessage = "La dirección es obligatoria")]
+    [Required(ErrorMessage = "El domicilio es obligatorio")]
     [StringLength(45)]
-    [Display(Name = "Dirección")]
-    public string Direccion { get; set; }
+    [Display(Name = "Domicilio")]
+    public string Domicilio { get; set; }
 
     [StringLength(45)]
-    [Display(Name = "Referencia de dirección")]
-    public string? ReferenciaDeDireccion { get; set; }          // No es requerida así que puede ser null
+    [Display(Name = "Referencia de domicilio")]
+    public string? Referencia { get; set; }
 
     [Required(ErrorMessage = "El teléfono es obligatorio")]
-    [Range(1100000000, 9999999999, ErrorMessage = "El teléfono debe tener 10 dígitos, sin 0 ni 15.")]
+    [Range(1100000000, 3894999999, ErrorMessage = "El teléfono debe tener 10 dígitos, sin 0 ni 15.")]
     [Display(Name = "Teléfono")]
-    public ulong Telefono { get; set; }
+    public long Telefono { get; set; }
 }

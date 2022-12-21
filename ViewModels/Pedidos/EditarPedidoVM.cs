@@ -5,29 +5,27 @@ namespace CadeteriaMVC.ViewModels.Pedidos;
 public class EditarPedidoVM
 {
     [Required]
-    public uint Nro { get; set; }
-
-    [Required]
-    public uint IdCliente { get; set; }
+    public int Id { get; set; }
 
     [Required(ErrorMessage = "El pedido es obligatorio")]
     [StringLength(45)]
     [Display(Name = "Pedido")]
-    public string Obs { get; set; }
+    public string Descripcion { get; set; }
 
-    [Required(ErrorMessage = "El cliente es obligatorio")]
-    [StringLength(45)]
+    [Required]
+    public int IdCliente { get; set; }
+
+    [Display(Name = "Cadete a cargo")]
+    public int? IdCadete { get; set; }                      // IMPORTANTE: debe ser nulleable sino no pasará la validación xq por defecto tendrá NULL
+
+    [Required]
+    [Display(Name = "Estado")]
+    public int IdEstado { get; set; }
+
     [Display(Name = "Cliente")]
     public string Cliente { get; set; }
 
-    [Display(Name = "Cadete a cargo")]
-    public uint? IdCadete { get; set; }                     // IMPORTANTE: debe ser nulleable sino no pasará la validación xq por defecto tendrá NULL
+    public SelectList? ListaDeCadetesVM { get; set; }        // Sirve para mostrar el nombre
 
-    [Required(ErrorMessage = "El estado es obligatorio")]
-    [Display(Name = "Estado")]
-    public uint IdEstado { get; set; }
-
-    public SelectList? ListaDeCadetesVM { get; set; }         // Sirve para mostrar el nombre en la edicion de pedidos. IMPORTANTE: debe ser nulleable sino no pasará la validación xq por defecto tendrá NULL
-
-    public SelectList? ListaDeEstadosVM { get; set; }         // Sirve para mostrar el nombre en la edicion de pedidos. IMPORTANTE: debe ser nulleable sino no pasará la validación xq por defecto tendrá NULL
+    public SelectList? ListaDeEstadosVM { get; set; }        // Sirve para mostrar el nombre
 }

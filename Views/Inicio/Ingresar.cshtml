@@ -1,21 +1,23 @@
-﻿@section Scripts { <partial name="_ValidationScriptsPartial" /> }
-@model CadeteriaMVC.ViewModels.Inicio.IngresarVM;
-@{
+﻿@{
+    @section Scripts { <partial name="_ValidationScriptsPartial" /> }
+    @model CadeteriaMVC.ViewModels.Inicio.IngresarVM;
+    
     ViewData["Title"] = "Ingresar";
-}
-@if (TempData["Error"] != null)
-{
-    <script type="text/javascript">
-        alert('@TempData["Error"]')
-    </script>
+    
+    if (TempData["Error"] != null)
+    {
+        <script type="text/javascript">
+            alert('@TempData["Error"]')
+        </script>
+    }
 }
 
-            <h1>@ViewData["Title"]</h1>
+            <h1 class="text-info">@ViewData["Title"]</h1>
             <form asp-controller="Inicio" asp-action="Ingresar" method="post">
                 <div class="form-group row m-2">
-                    <label asp-for="@Model.NickName"></label>
-                    <input asp-for="@Model.NickName" placeholder="Ingrese el usuario" class="form-control" />
-                    <span asp-validation-for="@Model.NickName" class="alert-warning"></span>
+                    <label asp-for="@Model.Usuario"></label>
+                    <input asp-for="@Model.Usuario" placeholder="Ingrese el usuario" class="form-control" />
+                    <span asp-validation-for="@Model.Usuario" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
                     <label asp-for="@Model.Contrasena"></label>
@@ -23,37 +25,30 @@
                     <span asp-validation-for="@Model.Contrasena" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
-                    <input class="btn btn-primary mb-2" type="submit" value="Ingresar">
-                    <input class="btn btn-primary mb-2" type="reset" value="Borrar">
+                    <input class="btn btn-info bg-gradient mb-2" type="submit" value="Ingresar">
+                    <input class="btn btn-info bg-gradient mb-2" type="reset" value="Borrar">
                 </div>
             </form>
+            <hr />
+            <h2 class="text-info">Listado de Usuarios Registrados</h2>
             <table class="table table-hover">
-                <tr>
-                    <th>Permisos</th>
-                    <th>Nombre</th>
-                    <th>Usuario</th>
-                    <th>Contraseña</th>
-                    <th>Id de cadete</th>
-                </tr>
-                <tr>
-                    <td>Administrador</td>
-                    <td>Juan</td>
-                    <td>admin</td>
-                    <td>admin</td>
-                    <td>[No aplica]</td>
-                </tr>
-                <tr>
-                    <td>Cadete</td>
-                    <td>Agustin</td>
-                    <td>cade2</td>
-                    <td>cade2</td>
-                    <td>2</td>
-                </tr>
-                <tr>
-                    <td>Cadete</td>
-                    <td>Sergio</td>
-                    <td>cade3</td>
-                    <td>cade3</td>
-                    <td>3</td>
-                </tr>
+                <thead>
+                    <tr>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeEmpleadosVM.First().Rol)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeEmpleadosVM.First().Nombre)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeEmpleadosVM.First().Usuario)</th>
+                        <th scope="col">@Html.DisplayNameFor(Model => Model.ListaDeEmpleadosVM.First().Contrasena)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var Empleado in Model.ListaDeEmpleadosVM)
+                    {
+                        <tr>
+                            <td scope="row" class="align-middle">@Empleado.Rol</td>
+                            <td class="align-middle">@Empleado.Nombre</td>
+                            <td class="align-middle">@Empleado.Usuario</td>
+                            <td class="align-middle">@Empleado.Contrasena</td>
+                        </tr>
+                    }
+                </tbody>
             </table>

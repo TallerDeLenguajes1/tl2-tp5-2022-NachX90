@@ -1,6 +1,21 @@
-﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccesor
-@{
+﻿@{
+    @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccesor
+    var SesionNombre = @HttpContextAccesor.HttpContext.Session.GetString("Nombre");
+    var SesionUsuario = @HttpContextAccesor.HttpContext.Session.GetString("Usuario");
+    var SesionIdRol = @HttpContextAccesor.HttpContext.Session.GetInt32("IdRol");
+    var SesionRol = @HttpContextAccesor.HttpContext.Session.GetString("Rol");
+    
     ViewData["Title"] = "Inicio";
+    
+    if (TempData["Error"] != null)
+    {
+        <script type="text/javascript">
+            alert('@TempData["Error"]')
+        </script>
+    }
 }
 
-            <h1>Bienvenido @HttpContextAccesor.HttpContext.Session.GetString("Nombre")</h1>
+            <h1 class="text-info">Bienvenido @SesionNombre (@SesionRol)</h1>
+            <div class="text-center">
+                <img src="~/img/escaloneta.png" alt="Messi alzando la copa del mundo junto al equipo" class="img-fluid" />
+            </div>

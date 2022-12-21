@@ -4,7 +4,7 @@
     ViewData["Title"] = "Crear cliente";
 }
 
-            <h1>Crear cliente</h1>
+            <h1 class="text-info">@ViewData["Title"]</h1>
             <form asp-controller="Clientes" asp-action="CrearCliente" method="post">
                 <div class="form-group row m-2">
                     <label asp-for="@Model.Nombre"></label>
@@ -12,14 +12,14 @@
                     <span asp-validation-for="@Model.Nombre" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
-                    <label asp-for="@Model.Direccion"></label>
-                    <input asp-for="@Model.Direccion" placeholder="Ingrese la dirección" class="form-control"/>
-                    <span asp-validation-for="@Model.Direccion" class="alert-warning"></span>
+                    <label asp-for="@Model.Domicilio"></label>
+                    <input asp-for="@Model.Domicilio" placeholder="Ingrese la dirección" class="form-control"/>
+                    <span asp-validation-for="@Model.Domicilio" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
-                    <label asp-for="@Model.ReferenciaDeDireccion"></label>
-                    <input asp-for="@Model.ReferenciaDeDireccion" placeholder="Ingrese la referencia" class="form-control"/>
-                    <span asp-validation-for="@Model.ReferenciaDeDireccion" class="alert-warning"></span>
+                    <label asp-for="@Model.Referencia"></label>
+                    <input asp-for="@Model.Referencia" placeholder="Ingrese la referencia" class="form-control"/>
+                    <span asp-validation-for="@Model.Referencia" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
                     <label asp-for="@Model.Telefono"></label>
@@ -27,7 +27,7 @@
                     <span asp-validation-for="@Model.Telefono" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
-                    <input class="btn btn-primary mb-2" type="submit" value="Crear cliente">
-                    <a asp-controller="Clientes" asp-action="ListadoDeClientes" class="btn btn-primary mb-2">Cancelar</a>
+                    <input class="btn btn-info bg-gradient mb-2" type="submit" value="Crear cliente">
+                    <a asp-controller="Clientes" asp-action="ListadoDeClientes" class="btn btn-info bg-gradient mb-2">Cancelar</a>
                 </div>
             </form>

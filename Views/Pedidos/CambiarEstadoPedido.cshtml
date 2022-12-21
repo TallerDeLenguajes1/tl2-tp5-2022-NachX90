@@ -1,0 +1,30 @@
+﻿@{
+    @section Scripts { <partial name="_ValidationScriptsPartial" /> }
+    @model CadeteriaMVC.ViewModels.Pedidos.CambiarEstadoPedidoVM;
+
+    ViewData["Title"] = "Cambiar estado pedido";
+}
+
+            <h1 class="text-info">@ViewData["Title"]</h1>
+            <form asp-controller="Pedidos" asp-action="CambiarEstadoPedido" method="post">
+                <input asp-for="@Model.Id" readonly hidden />
+                <input asp-for="@Model.IdCliente" readonly hidden />
+                <input asp-for="@Model.IdCadete" readonly hidden />
+                <div class="form-group row m-2">
+                    <label asp-for="@Model.Descripcion"></label>
+                    <input asp-for="@Model.Descripcion" readonly class="form-control" />
+                </div>
+                <div class="form-group row m-2">
+                    <label asp-for="@Model.Cliente"></label>
+                    <input asp-for="@Model.Cliente" readonly class="form-control "/>
+                </div>
+                <div class="form-group row m-2">
+                    <label asp-for="@Model.IdEstado"></label>
+                    <select asp-for="@Model.IdEstado" asp-items="@Model.ListaDeEstadosVM" class="form-select"></select>
+                    <span asp-validation-for="@Model.IdEstado" class="alert-warning"></span>
+                </div>
+                <div class="form-group row m-2">
+                    <input class="btn btn-info bg-gradient mb-2" type="submit" value="Cambiar estado">
+                    <a asp-controller="Pedidos" asp-action="ListarPorCadete" asp-route-id="@Model.IdCadete" class="btn btn-info bg-gradient mb-2">Cancelar</a>
+                </div>
+            </form>

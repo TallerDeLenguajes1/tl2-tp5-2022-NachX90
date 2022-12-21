@@ -1,96 +1,221 @@
-﻿using CadeteriaMVC.Models;
+﻿using CadeteriaMVC.Controllers;
+using CadeteriaMVC.Interfaces;
+using CadeteriaMVC.Models;
 using System.Data.SQLite;
+using System.Runtime.InteropServices;
 
 namespace CadeteriaMVC.Repositories
 {
-    public class ClientesRepository : IClientesRepository
+    public class ClientesRepository : IDBRepository <Cliente>
     {
-        private readonly IConexionBDRepository _conexionBDRepository;
+        private readonly ILogger<CadetesController> _logger;
+        private readonly IDBConnectionRepository _conexionBDRepository;
 
-        public ClientesRepository(IConexionBDRepository conexionBDRepository)
+        public ClientesRepository(ILogger<CadetesController> logger, IDBConnectionRepository conexionBDRepository)
         {
+            _logger = logger;
             _conexionBDRepository = conexionBDRepository;
         }
 
-        public void Crear(Cliente Cliente)
+        public void Alta(Cliente Objeto, [Optional] int IdUsuario)
         {
-            var SentenciaSQL = $"insert into cliente (cliente, direccion, referencia, telefono) values ('{Cliente.Nombre}', '{Cliente.Direccion}', '{Cliente.ReferenciaDeDireccion}', '{Cliente.Telefono}');";
-            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            try
             {
-                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
-                Conexion.Open();
-                Comando.ExecuteNonQuery();
-                Conexion.Close();
-            }
-        }
-
-        public void Editar(Cliente Cliente)
-        {
-            var SentenciaSQL = $"update cliente set cliente='{Cliente.Nombre}', direccion='{Cliente.Direccion}', referencia='{Cliente.ReferenciaDeDireccion}', telefono={Cliente.Telefono} where id_cliente={Cliente.Id};";
-            using (var Conexion = _conexionBDRepository.ConexionSQLite())
-            {
-                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
-                Conexion.Open();
-                Comando.ExecuteNonQuery();
-                Conexion.Close();
-            }
-        }
-
-        public void Eliminar(int Id)
-        {
-            var SentenciaSQL = $"delete from cliente where id_cliente={Id};";
-            using (var Conexion = _conexionBDRepository.ConexionSQLite())
-            {
-                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
-                Conexion.Open();
-                Comando.ExecuteNonQuery();
-                Conexion.Close();
-            }
-        }
-
-        public Cliente Obtener(int Id)
-        {
-            Cliente Cliente = new();
-            var SentenciaSQL = $"select cliente, direccion, referencia, telefono from cliente where id_cliente={Id};";
-            using (var Conexion = _conexionBDRepository.ConexionSQLite())
-            {
-                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
-                Conexion.Open();
-                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                var SentenciaSQL1 = $"insert into persona (nombre, domicilio, telefono) values ('{Objeto.Nombre}', '{Objeto.Domicilio}', {Objeto.Telefono});";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
                 {
-                    while (Reader.Read())
-                    {
-                        Cliente.Id = Convert.ToUInt32(Id);
-                        Cliente.Nombre = string.Format("{0}", Reader[0]);
-                        Cliente.Direccion = string.Format("{0}", Reader[1]);
-                        Cliente.ReferenciaDeDireccion = string.Format("{0}", Reader[2]);
-                        Cliente.Telefono = Convert.ToUInt32(string.Format("{0}", Reader[3]));
-                    }
+                    var Comando = new SQLiteCommand(SentenciaSQL1, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
                 }
-                Conexion.Close();
+                var Id = ObtenerID(Objeto);
+                var SentenciaSQL2 = $"insert into cliente (id, referencia) values ({Id}, '{Objeto.Referencia}');";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL2, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
+                }
+                _logger.LogInformation($"El usuario {IdUsuario} cargó el cliente {Id}.");
             }
-            return Cliente;
+            catch (SQLiteException SQLiteEx)
+            {
+                _logger.LogDebug($"Error en alta de cliente: {SQLiteEx.ToString()}");
+                throw new Exception("Error en alta de cliente.", SQLiteEx);
+            }
+            catch (Exception Ex)
+            {
+                _logger.LogDebug($"Error en la DB: {Ex.ToString()}");
+                throw new Exception("Error en la DB.", Ex);
+            }
         }
 
-        public List<Cliente> ObtenerTodos()
+        public void BajaLogica(int Id, [Optional] int IdUsuario)
         {
-            List<Cliente> ListaDeClientes = new();
-            var SentenciaSQL = "select id_cliente from cliente;";
-            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            try
             {
-                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
-                Conexion.Open();
-                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                var SentenciaSQL = $"update persona set visible = 0 where id = {Id};";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
                 {
-                    while (Reader.Read())
-                    {
-                        var Cliente = Obtener(Convert.ToInt32(string.Format("{0}", Reader[0])));
-                        ListaDeClientes.Add(Cliente);
-                    }
+                    var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
                 }
-                Conexion.Close();
+                _logger.LogInformation($"El usuario {IdUsuario} eliminó el cliente {Id}.");
             }
-            return ListaDeClientes;
+            catch (SQLiteException SQLiteEx)
+            {
+                _logger.LogDebug($"Error en baja de cliente: {SQLiteEx.ToString()}");
+                throw new Exception("Error en baja de cliente.", SQLiteEx);
+            }
+            catch (Exception Ex)
+            {
+                _logger.LogDebug($"Error en la DB: {Ex.ToString()}");
+                throw new Exception("Error en la DB.", Ex);
+            }
+        }
+
+        public void Modificacion(Cliente Objeto, [Optional] int IdUsuario)
+        {
+            try
+            {
+                var SentenciaSQL1 = $"update persona set nombre = '{Objeto.Nombre}', domicilio = '{Objeto.Domicilio}', telefono = {Objeto.Telefono} where id = {Objeto.Id};";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL1, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
+                }
+                var SentenciaSQL2 = $"update cliente set referencia = '{Objeto.Referencia}' where id = {Objeto.Id};";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL2, Conexion);
+                    Conexion.Open();
+                    Comando.ExecuteNonQuery();
+                    Conexion.Close();
+                }
+                _logger.LogInformation($"El usuario {IdUsuario} modificó el cliente {Objeto.Id}.");
+            }
+            catch (SQLiteException SQLiteEx)
+            {
+                _logger.LogDebug($"Error en modificación de cliente: {SQLiteEx.ToString()}");
+                throw new Exception("Error en modificación de cliente.", SQLiteEx);
+            }
+            catch (Exception Ex)
+            {
+                _logger.LogDebug($"Error en la DB: {Ex.ToString()}");
+                throw new Exception("Error en la DB.", Ex);
+            }
+        }
+
+        public int ObtenerID(Cliente Objeto)
+        {
+            try
+            {
+                int Id = 0;
+                var SentenciaSQL = $"select id from persona where telefono = {Objeto.Telefono};";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                    Conexion.Open();
+                    using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                    {
+                        while (Reader.Read())
+                        {
+                            Id = Convert.ToInt32(Reader[0]);
+                        }
+                    }
+                    Conexion.Close();
+                }
+                return Id;
+            }
+            catch (SQLiteException SQLiteEx)
+            {
+                _logger.LogDebug($"Error en obtener id de cliente: {SQLiteEx.ToString()}");
+                throw new Exception("Error en obtener id de cliente.", SQLiteEx);
+            }
+            catch (Exception Ex)
+            {
+                _logger.LogDebug($"Error en la DB: {Ex.ToString()}");
+                throw new Exception("Error en la DB.", Ex);
+            }
+        }
+
+        public Cliente ObtenerPorID(int Id, [Optional] int IdUsuario)
+        {
+            try
+            {
+                Cliente Objeto = new();
+                var SentenciaSQL = $"select nombre, domicilio, telefono, referencia from cliente inner join persona using (id) where id = {Id} and visible = 1;";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                    Conexion.Open();
+                    using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                    {
+                        while (Reader.Read())
+                        {
+                            Objeto.Id = Id;
+                            Objeto.Nombre = Reader[0].ToString();
+                            Objeto.Domicilio = Reader[1].ToString();
+                            Objeto.Telefono = Convert.ToInt64(Reader[2]);
+                            Objeto.Referencia = Reader[3].ToString();
+                        }
+                    }
+                    Conexion.Close();
+                }
+                _logger.LogInformation($"El usuario {IdUsuario} solicitó el cliente {Id}.");
+                return Objeto;
+            }
+            catch (SQLiteException SQLiteEx)
+            {
+                _logger.LogDebug($"Error en obtener cliente: {SQLiteEx.ToString()}");
+                throw new Exception("Error en obtener cliente.", SQLiteEx);
+            }
+            catch (Exception Ex)
+            {
+                _logger.LogDebug($"Error en la DB: {Ex.ToString()}");
+                throw new Exception("Error en la DB.", Ex);
+            }
+        }
+
+        public List<Cliente> ObtenerTodos([Optional] int IdUsuario)
+        {
+            try
+            {
+                List<Cliente> ListaDeObjetos = new();
+                var SentenciaSQL = "select id from cliente inner join persona using (id) where visible = 1;";
+                using (var Conexion = _conexionBDRepository.ConexionSQLite())
+                {
+                    var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                    Conexion.Open();
+                    using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                    {
+                        while (Reader.Read())
+                        {
+                            var Objeto = ObtenerPorID(Convert.ToInt32(Reader[0]));
+                            ListaDeObjetos.Add(Objeto);
+                        }
+                    }
+                    Conexion.Close();
+                }
+                _logger.LogInformation($"El usuario {IdUsuario} soliticó todos los clientes.");
+                return ListaDeObjetos;
+            }
+            catch (SQLiteException SQLiteEx)
+            {
+                _logger.LogDebug($"Error en obtener todos los clientes: {SQLiteEx.ToString()}");
+                throw new Exception("Error en obtener todos los clientes.", SQLiteEx);
+            }
+            catch (Exception Ex)
+            {
+                _logger.LogDebug($"Error en la DB: {Ex.ToString()}");
+                throw new Exception("Error en la DB.", Ex);
+            }
         }
     }
 }

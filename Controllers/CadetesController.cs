@@ -1,20 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using AutoMapper;
-using CadeteriaMVC.Repositories;
 using CadeteriaMVC.Models;
 using CadeteriaMVC.ViewModels.Cadetes;
+using CadeteriaMVC.Interfaces;
 using CadeteriaMVC.Enums;
 
 namespace CadeteriaMVC.Controllers
 {
-    public class CadetesController : Controller
+    public class CadetesController : ControlDeSesionController
     {
         private readonly ILogger<CadetesController> _logger;
         private readonly IMapper _mapper;
-        private readonly ICadetesRepository _cadetesRepository;
+        private readonly IDBRepository<Empleado> _cadetesRepository;
 
-        public CadetesController(ILogger<CadetesController> logger, IMapper mapper, ICadetesRepository cadetesRepository)
+        public CadetesController(ILogger<CadetesController> logger, IMapper mapper, IDBRepository<Empleado> cadetesRepository)
         {
             _logger = logger;
             _mapper = mapper;
@@ -24,125 +23,137 @@ namespace CadeteriaMVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int) Roles.Administrador:
-                    return RedirectToAction("ListadoDeCadetes");
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
+            if (EsAdministrador())
+                return RedirectToAction("ListadoDeCadetes");
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult ListadoDeCadetes()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador())
             {
-                case (int) Roles.Administrador:
-                    var ListaDeCadetes = _cadetesRepository.ObtenerTodos();
-                    var ListaDeCadetesVM = _mapper.Map<List<CadeteVM>>(ListaDeCadetes);
+                try
+                {
+                    var ListaDeEmpleados = _cadetesRepository.ObtenerTodos(IdUsuario());
+                    var ListaDeEmpleadosVM = _mapper.Map<List<CadeteVM>>(ListaDeEmpleados);
                     var ListadoDeCadetesVM = new ListadoDeCadetesVM();
-                    ListadoDeCadetesVM.ListaDeCadetesVM = ListaDeCadetesVM;
+                    ListadoDeCadetesVM.ListaDeCadetesVM = ListaDeEmpleadosVM;
                     return View(ListadoDeCadetesVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult CrearCadete()
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int) Roles.Administrador:
-                    return View(new CrearCadeteVM());
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
+            if (EsAdministrador())
+                return View(new CrearCadeteVM());
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpPost]
         public IActionResult CrearCadete(CrearCadeteVM CrearCadeteVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int) Roles.Administrador:
-                    if (ModelState.IsValid)
+            if (EsAdministrador())
+                if (ModelState.IsValid)
+                {
+                    try
                     {
-                        var Cadete = _mapper.Map<Cadete>(CrearCadeteVM);
-                        _cadetesRepository.Crear(Cadete);
+                        var Empleado = _mapper.Map<Empleado>(CrearCadeteVM);
+                        _cadetesRepository.Alta(Empleado, IdUsuario());
                         return RedirectToAction("ListadoDeCadetes");
                     }
-                    else
+                    catch (Exception Ex)
                     {
-                        TempData["Error"] = "Ocurrió un problema al procesar los datos. Por favor intente nuevamente";
-                        return RedirectToAction("CrearCadete");
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
                     }
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    return RedirectToAction("CrearCadete");
+                }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult EliminarCadete(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador())
             {
-                case (int) Roles.Administrador:
-                    _cadetesRepository.Eliminar(Id);
+                try
+                {
+                    _cadetesRepository.BajaLogica(Id, IdUsuario());
                     return RedirectToAction("ListadoDeCadetes");
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpGet]
         public IActionResult EditarCadete(int Id)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
+            if (EsAdministrador() || EsCadete() && HttpContext.Session.GetInt32("Id") == Id)
             {
-                case (int) Roles.Administrador:
-                    var Cadete = _cadetesRepository.Obtener(Id);
-                    var EditarCadeteVM = _mapper.Map<EditarCadeteVM>(Cadete);
+                try
+                {
+                    var Empleado = _cadetesRepository.ObtenerPorID(Id, IdUsuario());
+                    var EditarCadeteVM = _mapper.Map<EditarCadeteVM>(Empleado);
                     return View(EditarCadeteVM);
-                default:
-                    return RedirectToAction("Index", "Inicio");
+                }
+                catch (Exception Ex)
+                {
+                    TempData["Error"] = Ex.Message;
+                    return View("ErrorControlado");
+                }
             }
+            else
+                return View("AccesoDenegado");
         }
 
         [HttpPost]
         public IActionResult EditarCadete(EditarCadeteVM EditarCadeteVM)
         {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int) Roles.Administrador:
-                    if (ModelState.IsValid)
+            if (EsAdministrador() || EsCadete())
+                if (ModelState.IsValid)
+                {
+                    try
                     {
-                        var Cadete = _mapper.Map<Cadete>(EditarCadeteVM);
-                        _cadetesRepository.Editar(Cadete);
+                        var Empleado = _mapper.Map<Empleado>(EditarCadeteVM);
+                        _cadetesRepository.Modificacion(Empleado, IdUsuario());
                         return RedirectToAction("ListadoDeCadetes");
                     }
-                    else
+                    catch (Exception Ex)
                     {
-                        TempData["Error"] = "Ocurrió un problema al procesar los datos. Por favor intente nuevamente";
-                        return RedirectToAction("EditarCadete");
+                        TempData["Error"] = Ex.Message;
+                        return View("ErrorControlado");
                     }
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
-
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            switch (HttpContext.Session.GetInt32("IdRol"))
-            {
-                case (int) Roles.Administrador:
-                    return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-                default:
-                    return RedirectToAction("Index", "Inicio");
-            }
+                }
+                else
+                {
+                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    return RedirectToAction("ListadoDeCadetes");
+                }
+            else
+                return View("AccesoDenegado");
         }
     }
 }

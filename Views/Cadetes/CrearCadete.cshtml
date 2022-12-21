@@ -1,34 +1,47 @@
-﻿@section Scripts { <partial name="_ValidationScriptsPartial" /> }
-@model CadeteriaMVC.ViewModels.Cadetes.CrearCadeteVM;
-@{
+﻿@{
+    @section Scripts { <partial name="_ValidationScriptsPartial" /> }
+    @model CadeteriaMVC.ViewModels.Cadetes.CrearCadeteVM;
+
     ViewData["Title"] = "Crear cadete";
-}
-@if (TempData["Error"] != null)
-{
-    <script type="text/javascript">
-        alert('@TempData["Error"]')
-    </script>
+    
+    if (TempData["Error"] != null)
+    {
+        <script type="text/javascript">
+            alert('@TempData["Error"]')
+        </script>
+    }
 }
 
-            <h1>Crear cadete</h1>
+            <h1 class="text-info">@ViewData["Title"]</h1>
             <form asp-controller="Cadetes" asp-action="CrearCadete" method="post">
+                <input asp-for="@Model.IDRol" value="3" hidden />
                 <div class="form-group row m-2">
                     <label asp-for="@Model.Nombre"></label>
                     <input asp-for="@Model.Nombre" placeholder="Ingrese el nombre" class="form-control"/>
                     <span asp-validation-for="@Model.Nombre" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
-                    <label asp-for="@Model.Direccion"></label>
-                    <input asp-for="@Model.Direccion" placeholder="Ingrese la dirección" class="form-control"/>
-                    <span asp-validation-for="@Model.Direccion" class="alert-warning"></span>
+                    <label asp-for="@Model.Domicilio"></label>
+                    <input asp-for="@Model.Domicilio" placeholder="Ingrese el domicilio" class="form-control"/>
+                    <span asp-validation-for="@Model.Domicilio" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
                     <label asp-for="@Model.Telefono"></label>
-                    <input asp-for="@Model.Telefono" value="" placeholder="Ingrese el teléfono" class="form-control"/>  @* El value es necesario para que no aparezca un 0 y se pueda ver el placeholder *@
+                    <input asp-for="@Model.Telefono" value="" placeholder="Ingrese el teléfono" class="form-control"/>
                     <span asp-validation-for="@Model.Telefono" class="alert-warning"></span>
                 </div>
                 <div class="form-group row m-2">
-                    <input class="btn btn-primary mb-2" type="submit" value="Crear cadete">
-                    <a asp-controller="Cadetes" asp-action="ListadoDeCadetes" class="btn btn-primary mb-2">Cancelar</a>
+                    <label asp-for="@Model.Usuario"></label>
+                    <input asp-for="@Model.Usuario" placeholder="Ingrese el usuario" class="form-control"/>
+                    <span asp-validation-for="@Model.Usuario" class="alert-warning"></span>
+                </div>
+                <div class="form-group row m-2">
+                    <label asp-for="@Model.Contrasena"></label>
+                    <input asp-for="@Model.Contrasena" placeholder="Ingrese la contraseña" class="form-control"/>
+                    <span asp-validation-for="@Model.Contrasena" class="alert-warning"></span>
+                </div>
+                <div class="form-group row m-2">
+                    <input class="btn btn-info bg-gradient mb-2" type="submit" value="Crear cadete">
+                    <a asp-controller="Cadetes" asp-action="ListadoDeCadetes" class="btn btn-info bg-gradient mb-2">Cancelar</a>
                 </div>
             </form>

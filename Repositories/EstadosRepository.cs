@@ -1,21 +1,59 @@
-﻿using CadeteriaMVC.Models;
+﻿using CadeteriaMVC.Interfaces;
+using CadeteriaMVC.Models;
 using System.Data.SQLite;
+using System.Runtime.InteropServices;
 
 namespace CadeteriaMVC.Repositories
 {
-    public class EstadosRepository : IEstadosRepository
+    public class EstadosRepository : IDBRepository <Estado>
     {
-        private readonly IConexionBDRepository _conexionBDRepository;
+        private readonly IDBConnectionRepository _conexionBDRepository;
 
-        public EstadosRepository(IConexionBDRepository conexionBDRepository)
+        public EstadosRepository(IDBConnectionRepository conexionBDRepository)
         {
             _conexionBDRepository = conexionBDRepository;
         }
 
-        public List<Estado> ObtenerTodos()
+        public void Alta(Estado Objeto, [Optional] int IdUsuario)     // primero probaré así y luego anidado como está en ObtenerTodos()
         {
-            List<Estado> ListaDeEstados = new();
-            var SentenciaSQL = "select * from estado;";
+            var SentenciaSQL = $"insert into estado (estado, descripcion) values ('{Objeto.NombreEstado}', '{Objeto.Descripcion}');";
+            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                Comando.ExecuteNonQuery();
+                Conexion.Close();
+            }
+        }
+
+        public void BajaLogica(int Id, [Optional] int IdUsuario)
+        {
+            var SentenciaSQL = $"update estado set visible = 0 where id = {Id};";
+            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                Comando.ExecuteNonQuery();
+                Conexion.Close();
+            }
+        }
+
+        public void Modificacion(Estado Objeto, [Optional] int IdUsuario)
+        {
+            var SentenciaSQL = $"update estado set estado = '{Objeto.NombreEstado}', descripcion = '{Objeto.Descripcion}' where id = {Objeto.Id};";
+            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                Comando.ExecuteNonQuery();
+                Conexion.Close();
+            }
+        }
+
+        public int ObtenerID(Estado Objeto)
+        {
+            int Id = 0;
+            var SentenciaSQL = $"select id from estado where estado = {Objeto.NombreEstado};";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
             {
                 var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
@@ -24,16 +62,55 @@ namespace CadeteriaMVC.Repositories
                 {
                     while (Reader.Read())
                     {
-                        var id = Convert.ToUInt32(string.Format("{0}", Reader[0]));
-                        var estado = string.Format("{0}", Reader[1]);
-                        var descripcion = string.Format("{0}", Reader[2]);
-                        Estado Estado = new(id, estado, descripcion);
-                        ListaDeEstados.Add(Estado);
+                        Id = Convert.ToInt32(Reader[0]);
                     }
                 }
                 Conexion.Close();
             }
-            return ListaDeEstados;
+            return Id;
+        }
+
+        public Estado ObtenerPorID(int Id, [Optional] int IdUsuario)
+        {
+            Estado Objeto = new();
+            var SentenciaSQL = $"select estado, descripcion from estado where id = {Id} and visible = 1;";
+            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        Objeto.Id = Id;
+                        Objeto.NombreEstado = Reader[0].ToString();
+                        Objeto.Descripcion = Reader[1].ToString();
+                    }
+                }
+                Conexion.Close();
+            }
+            return Objeto;
+        }
+
+        public List<Estado> ObtenerTodos([Optional] int IdUsuario)
+        {
+            List<Estado> ListaDeObjetos = new();
+            var SentenciaSQL = "select id from estado where visible = 1;";
+            using (var Conexion = _conexionBDRepository.ConexionSQLite())
+            {
+                var Comando = new SQLiteCommand(SentenciaSQL, Conexion);
+                Conexion.Open();
+                using (SQLiteDataReader Reader = Comando.ExecuteReader())
+                {
+                    while (Reader.Read())
+                    {
+                        var Objeto = ObtenerPorID(Convert.ToInt32(Reader[0]));
+                        ListaDeObjetos.Add(Objeto);
+                    }
+                }
+                Conexion.Close();
+            }
+            return ListaDeObjetos;
         }
     }
 }
