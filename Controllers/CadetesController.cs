@@ -23,137 +23,111 @@ namespace CadeteriaMVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            if (EsAdministrador())
-                return RedirectToAction("ListadoDeCadetes");
-            else
-                return View("AccesoDenegado");
+            if (!EsAdministrador()) return View("AccesoDenegado");
+            return RedirectToAction("ListadoDeCadetes");
         }
 
         [HttpGet]
         public IActionResult ListadoDeCadetes()
         {
-            if (EsAdministrador())
+            try
             {
-                try
-                {
-                    var ListaDeEmpleados = _cadetesRepository.ObtenerTodos(IdUsuario());
-                    var ListaDeEmpleadosVM = _mapper.Map<List<CadeteVM>>(ListaDeEmpleados);
-                    var ListadoDeCadetesVM = new ListadoDeCadetesVM();
-                    ListadoDeCadetesVM.ListaDeCadetesVM = ListaDeEmpleadosVM;
-                    return View(ListadoDeCadetesVM);
-                }
-                catch (Exception Ex)
-                {
-                    TempData["Error"] = Ex.Message;
-                    return View("ErrorControlado");
-                }
+                if (!EsAdministrador()) return View("AccesoDenegado");
+                var ListaDeEmpleados = _cadetesRepository.ObtenerTodos(IdUsuario());
+                var ListaDeEmpleadosVM = _mapper.Map<List<CadeteVM>>(ListaDeEmpleados);
+                var ListadoDeCadetesVM = new ListadoDeCadetesVM();
+                ListadoDeCadetesVM.ListaDeCadetesVM = ListaDeEmpleadosVM;
+                return View(ListadoDeCadetesVM);
             }
-            else
-                return View("AccesoDenegado");
+            catch (Exception Ex)
+            {
+                TempData["Error"] = Ex.Message;
+                return View("ErrorControlado");
+            }
         }
 
         [HttpGet]
         public IActionResult CrearCadete()
         {
-            if (EsAdministrador())
-                return View(new CrearCadeteVM());
-            else
-                return View("AccesoDenegado");
+            if (!EsAdministrador()) return View("AccesoDenegado");
+            return View(new CrearCadeteVM());
         }
 
         [HttpPost]
         public IActionResult CrearCadete(CrearCadeteVM CrearCadeteVM)
         {
-            if (EsAdministrador())
+            try
+            {
+                if (!EsAdministrador()) return View("AccesoDenegado");
                 if (ModelState.IsValid)
                 {
-                    try
-                    {
                         var Empleado = _mapper.Map<Empleado>(CrearCadeteVM);
                         _cadetesRepository.Alta(Empleado, IdUsuario());
                         return RedirectToAction("ListadoDeCadetes");
-                    }
-                    catch (Exception Ex)
-                    {
-                        TempData["Error"] = Ex.Message;
-                        return View("ErrorControlado");
-                    }
                 }
-                else
-                {
-                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
-                    return RedirectToAction("CrearCadete");
-                }
-            else
-                return View("AccesoDenegado");
+                TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                return RedirectToAction("CrearCadete");
+            }
+            catch (Exception Ex)
+            {
+                TempData["Error"] = Ex.Message;
+                return View("ErrorControlado");
+            }
         }
 
         [HttpGet]
         public IActionResult EliminarCadete(int Id)
         {
-            if (EsAdministrador())
+            try
             {
-                try
-                {
-                    _cadetesRepository.BajaLogica(Id, IdUsuario());
-                    return RedirectToAction("ListadoDeCadetes");
-                }
-                catch (Exception Ex)
-                {
-                    TempData["Error"] = Ex.Message;
-                    return View("ErrorControlado");
-                }
+                if (!EsAdministrador()) return View("AccesoDenegado");
+                _cadetesRepository.BajaLogica(Id, IdUsuario());
+                return RedirectToAction("ListadoDeCadetes");
             }
-            else
-                return View("AccesoDenegado");
+            catch (Exception Ex)
+            {
+                TempData["Error"] = Ex.Message;
+                return View("ErrorControlado");
+            }
         }
 
         [HttpGet]
         public IActionResult EditarCadete(int Id)
         {
-            if (EsAdministrador() || EsCadete() && HttpContext.Session.GetInt32("Id") == Id)
+            try
             {
-                try
-                {
-                    var Empleado = _cadetesRepository.ObtenerPorID(Id, IdUsuario());
-                    var EditarCadeteVM = _mapper.Map<EditarCadeteVM>(Empleado);
-                    return View(EditarCadeteVM);
-                }
-                catch (Exception Ex)
-                {
-                    TempData["Error"] = Ex.Message;
-                    return View("ErrorControlado");
-                }
+                if (!EsAdministrador() && !(EsCadete() && HttpContext.Session.GetInt32("Id") == Id)) return View("AccesoDenegado");
+                var Empleado = _cadetesRepository.ObtenerPorID(Id, IdUsuario());
+                var EditarCadeteVM = _mapper.Map<EditarCadeteVM>(Empleado);
+                return View(EditarCadeteVM);
             }
-            else
-                return View("AccesoDenegado");
+            catch (Exception Ex)
+            {
+                TempData["Error"] = Ex.Message;
+                return View("ErrorControlado");
+            }
         }
-
+            
         [HttpPost]
         public IActionResult EditarCadete(EditarCadeteVM EditarCadeteVM)
         {
-            if (EsAdministrador() || EsCadete())
+            try
+            {
+                if (!EsAdministrador() && !EsCadete()) return View("AccesoDenegado");
                 if (ModelState.IsValid)
                 {
-                    try
-                    {
-                        var Empleado = _mapper.Map<Empleado>(EditarCadeteVM);
-                        _cadetesRepository.Modificacion(Empleado, IdUsuario());
-                        return RedirectToAction("ListadoDeCadetes");
-                    }
-                    catch (Exception Ex)
-                    {
-                        TempData["Error"] = Ex.Message;
-                        return View("ErrorControlado");
-                    }
-                }
-                else
-                {
-                    TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                    var Empleado = _mapper.Map<Empleado>(EditarCadeteVM);
+                    _cadetesRepository.Modificacion(Empleado, IdUsuario());
                     return RedirectToAction("ListadoDeCadetes");
                 }
-            else
-                return View("AccesoDenegado");
+                TempData["Error"] = Mensajes.MostrarError(Errores.ModeloInvalido);
+                return RedirectToAction("ListadoDeCadetes");
+            }
+            catch (Exception Ex)
+            {
+                TempData["Error"] = Ex.Message;
+                return View("ErrorControlado");
+            }
         }
     }
 }
