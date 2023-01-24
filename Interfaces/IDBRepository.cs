@@ -1,13 +1,11 @@
-﻿using System.Runtime.InteropServices;
-
-namespace CadeteriaMVC.Interfaces;
+﻿namespace CadeteriaMVC.Interfaces;
 
 public interface IDBRepository<T>
 {
-    void Alta(T Objeto, [Optional] int IdUsuario);
-    void BajaLogica(int Id, [Optional] int IdUsuario);
-    void Modificacion(T Objeto, [Optional] int IdUsuario);
+    void Alta(T Objeto);
+    void BajaLogica(int Id);
+    void Modificacion(T Objeto);
     int ObtenerID(T Objeto);
-    T ObtenerPorID(int Id, [Optional] int IdUsuario);
-    List<T> ObtenerTodos([Optional] int IdUsuario);
+    T ObtenerPorID(int Id);
+    List<T> ObtenerTodos();
 }

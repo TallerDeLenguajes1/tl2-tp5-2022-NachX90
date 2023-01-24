@@ -14,7 +14,7 @@ namespace CadeteriaMVC.Repositories
             _conexionBDRepository = conexionBDRepository;
         }
 
-        public void Alta(Empleado Objeto, [Optional] int IdUsuario)
+        public void Alta(Empleado Objeto)
         {
             var SentenciaSQL1 = $"insert into persona (nombre, domicilio, telefono) values ('{Objeto.Nombre}', '{Objeto.Domicilio}', {Objeto.Telefono});";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
@@ -35,7 +35,7 @@ namespace CadeteriaMVC.Repositories
             }
         }
 
-        public void BajaLogica(int Id, [Optional] int IdUsuario)
+        public void BajaLogica(int Id)
         {
             var SentenciaSQL = $"update persona set visible = 0 where id = {Id};";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
@@ -47,7 +47,7 @@ namespace CadeteriaMVC.Repositories
             }
         }
 
-        public void Modificacion(Empleado Objeto, [Optional] int IdUsuario)
+        public void Modificacion(Empleado Objeto)
         {
             var SentenciaSQL1 = $"update persona set nombre = '{Objeto.Nombre}', domicilio = '{Objeto.Domicilio}', telefono = {Objeto.Telefono} where id = {Objeto.Id};";
             using (var Conexion = _conexionBDRepository.ConexionSQLite())
@@ -87,7 +87,7 @@ namespace CadeteriaMVC.Repositories
             return Id;
         }
 
-        public Empleado ObtenerPorID(int Id, [Optional] int IdUsuario)
+        public Empleado ObtenerPorID(int Id)
         {
             Empleado Objeto = new();
             var SentenciaSQL = $"select nombre, domicilio, telefono, usuario, contrasena, idrol, rol from empleado E inner join persona P on E.id=P.id inner join rol R on E.idrol=R.id where E.id = {Id} and visible = 1;";
@@ -114,7 +114,7 @@ namespace CadeteriaMVC.Repositories
             return Objeto;
         }
 
-        public List<Empleado> ObtenerTodos([Optional] int IdUsuario)
+        public List<Empleado> ObtenerTodos()
         {
             List<Empleado> ListaDeObjetos = new();
             var SentenciaSQL = "select id from empleado inner join persona using (id) where visible = 1;";
